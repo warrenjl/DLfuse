@@ -175,6 +175,13 @@ for(int j = 1; j < mcmc_samples; ++j){
                            mean_temp,
                            lagged_covars,
                            sigma2_epsilon(j));
+   
+   //A21 Update
+   A21(j) = A21_update(sigma2_A,
+                       mean_temp,
+                       lagged_covars,
+                       sigma2_epsilon(j),
+                       w0.col(j));
   
    //w Update
    Rcpp::List w_output = w_update(y,

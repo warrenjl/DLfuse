@@ -23,6 +23,12 @@ double beta1_update(arma::vec y,
                     Rcpp::List lagged_covars,
                     double sigma2_epsilon);
 
+double A21_update(double sigma2_A,
+                  arma::vec mean_temp,
+                  Rcpp::List lagged_covars,
+                  double sigma2_epsilon,
+                  arma::vec w0_old);
+
 arma::vec theta_update(arma::mat x, 
                        arma::mat z,
                        arma::vec site_id,
