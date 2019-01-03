@@ -1,6 +1,6 @@
 #include "RcppArmadillo.h"
 #include "RcppArmadillo.h"
-#include "DFfuse.h"
+#include "DLfuse.h"
 using namespace arma;
 using namespace Rcpp;
 
@@ -9,42 +9,42 @@ using namespace Rcpp;
 
 Rcpp::List SpGPCW(int mcmc_samples,
                   arma::vec y,
-                  arma::mat x,
                   arma::mat z,
-                  arma::vec site_id,
+                  arma::mat spatial_dists,
                   arma::mat neighbors,
-                  double metrop_var_rho_trans,
-                  double metrop_var_phi_trans,
+                  double metrop_var_A11_trans,
+                  double metrop_var_A22_trans,
+                  double metrop_var_phi0_trans,
+                  double metrop_var_phi1_trans,
+                  double metrop_var_mu,
+                  arma::vec metrop_var_alpha,
+                  Rcpp::Nullable<double> alpha_sigma2_epsilon_prior = R_NilValue,
+                  Rcpp::Nullable<double> beta_sigma2_epsilon_prior = R_NilValue,
                   Rcpp::Nullable<double> sigma2_beta_prior = R_NilValue,
-                  Rcpp::Nullable<double> alpha_sigma2_theta_prior = R_NilValue,
-                  Rcpp::Nullable<double> beta_sigma2_theta_prior = R_NilValue,
-                  Rcpp::Nullable<double> a_rho_prior = R_NilValue,
-                  Rcpp::Nullable<double> b_rho_prior = R_NilValue,
-                  Rcpp::Nullable<double> alpha_sigma2_eta_prior = R_NilValue,
-                  Rcpp::Nullable<double> beta_sigma2_eta_prior = R_NilValue,
-                  Rcpp::Nullable<double> a_phi_prior = R_NilValue,
-                  Rcpp::Nullable<double> b_phi_prior = R_NilValue,
-                  Rcpp::Nullable<Rcpp::NumericVector> beta_init = R_NilValue,
-                  Rcpp::Nullable<Rcpp::NumericVector> theta_init = R_NilValue,
-                  Rcpp::Nullable<double> sigma2_theta_init = R_NilValue,
-                  Rcpp::Nullable<Rcpp::NumericMatrix> eta_init = R_NilValue,
-                  Rcpp::Nullable<double> rho_init = R_NilValue,
-                  Rcpp::Nullable<double> sigma2_eta_init = R_NilValue,
-                  Rcpp::Nullable<double> phi_init = R_NilValue,
-                  Rcpp::Nullable<int> rho_zero_indicator = R_NilValue){
+                  Rcpp::Nullable<double> sigma2_A_prior = R_NilValue,
+                  Rcpp::Nullable<double> alpha_phi0_prior = R_NilValue,
+                  Rcpp::Nullable<double> beta_phi0_prior = R_NilValue,
+                  Rcpp::Nullable<double> alpha_phi1_prior = R_NilValue,
+                  Rcpp::Nullable<double> beta_phi1_prior = R_NilValue
+                  Rcpp::Nullable<double> sigma2_mu_prior = R_NilValue,
+                  Rcpp::Nullable<double> alpha_tau2_prior = R_NilValue,
+                  Rcpp::Nullable<double> beta_tau2_prior = R_NilValue,
+                  ){
 
 //Defining Parameters and Quantities of Interest
-arma::mat beta(x.n_cols, mcmc_samples); beta.fill(0.00);
-arma::mat theta(z.n_cols, mcmc_samples); theta.fill(0.00);
-arma::vec sigma2_theta(mcmc_samples); sigma2_theta.fill(0.00);
-Rcpp::List eta(mcmc_samples);
-for(int j = 0; j < mcmc_samples; ++j){
-   arma::mat eta_temp(neighbors.n_cols, z.n_cols); eta_temp.fill(0.00);
-   eta[j] = eta_temp;
-   }
-arma::vec rho(mcmc_samples); rho.fill(0.00);
-arma::vec sigma2_eta(mcmc_samples); sigma2_eta.fill(0.00);
-arma::vec phi(mcmc_samples); phi.fill(0.00);
+arma::vec sigma2_epsilon(mcmc_samples); sigma2_epsilon.fill(0.00);
+arma::vec beta0(mcmc_samples); beta0.fill(0.00);
+arma::vec beta1(mcmc_samples); beta1.fill(0.00);
+arma::vec A11(mcmc_samples); A11.fill(0.00);
+arma::vec A22(mcmc_samples); A22.fill(0.00);
+arma::vec A21(mcmc_samples); A21.fill(0.00);
+arma::vec mu(mcmc_samples); mu.fill(0.00);
+arma::mat alpha(z.n_rows, mcmc_samples); alpha.fill(0.00);
+arma::vec tau2(mcmc_samples); tau2.fill(0.00);
+arma::mat w0(y.size(), mcmc_samples); w0.fill(0.00);
+arma::vec phi0(mcmc_samples); phi0.fill(0.00);
+arma::mat w1(y.size(), mcmc_samples); w1.fill(0.00);
+arma::vec phi1(mcmc_samples); phi1.fill(0.00);
 arma::vec neg_two_loglike(mcmc_samples); neg_two_loglike.fill(0.00);
 
 //Prior Information
@@ -182,17 +182,35 @@ for(int j = 1; j < mcmc_samples; ++j){
                        lagged_covars,
                        sigma2_epsilon(j),
                        w0.col(j));
+   
+   //tau2 Update
+   tau2(j) = tau2_update(G,
+                         CAR,
+                         alpha_tau2,
+                         beta_tau2,
+                         alpha.col(j));
+   
+   //w0 Update
+   w0.col(j) = w0_update(y,
+                         mean_temp,
+                         lagged_covars,
+                         A11(j),
+                         A21(j),
+                         sigma2_epsilon(j),
+                         Sigma0_inv);
   
-   //w Update
-   Rcpp::List w_output = w_update(y,
-                                  x,
-                                  z,
-                                  site_id,
-                                  beta.col(j-1),
-                                  theta.col(j-1),
-                                  eta[j-1]);
-   arma::vec w = w_output[0];
-   arma::vec gamma = w_output[1];
+   //w1 Update
+   w1.col(j) = w1_update(y,
+                         mean_temp,
+                         lagged_covars,
+                         A22(j),
+                         sigma2_epsilon(j),
+                         Sigma1_inv);
+   
+   //neg_two_loglike Update
+   neg_two_loglike(j) = neg_two_loglike_update(y,
+                                               mean_temp,
+                                               sigma2_epsilon(j));
   
    //beta Update
    beta.col(j) = beta_update(x, 

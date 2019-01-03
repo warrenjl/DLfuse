@@ -1,8 +1,8 @@
 #ifndef __DLfuse__
 #define __DLfuse__
 
-Rcpp::List temporal_corr_fun(int m,
-                             double phi);
+Rcpp::List spatial_corr_fun(double phi,
+                            arma::mat spatial_dists);
 
 double sigma2_epsilon_update(arma::vec y,
                              arma::vec sample_size,
@@ -28,6 +28,31 @@ double A21_update(double sigma2_A,
                   Rcpp::List lagged_covars,
                   double sigma2_epsilon,
                   arma::vec w0_old);
+
+double tau2_update(int G,
+                   arma::mat CAR,
+                   double alpha_tau2,
+                   double beta_tau2,
+                   arma::vec alpha);
+
+arma::vec w0_update(arma::vec y,
+                    arma::vec mean_temp,
+                    Rcpp::List lagged_covars,
+                    double A11,
+                    double A21,
+                    double sigma2_epsilon,
+                    arma::mat Sigma0_inv);
+
+arma::vec w1_update(arma::vec y,
+                    arma::vec mean_temp,
+                    Rcpp::List lagged_covars,
+                    double A22,
+                    double sigma2_epsilon,
+                    arma::mat Sigma1_inv);
+
+double neg_two_loglike_update(arma::vec y,
+                              arma::vec mean_temp,
+                              double sigma2_epsilon);
 
 arma::vec theta_update(arma::mat x, 
                        arma::mat z,
