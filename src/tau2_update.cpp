@@ -8,9 +8,9 @@ using namespace Rcpp;
 
 double tau2_update(int G,
                    arma::mat CAR,
+                   arma::vec alpha,
                    double alpha_tau2,
-                   double beta_tau2,
-                   arma::vec alpha){
+                   double beta_tau2){
 
 double alpha_tau2_update = 0.50*(alpha.size() - G) + 
                            alpha_tau2;

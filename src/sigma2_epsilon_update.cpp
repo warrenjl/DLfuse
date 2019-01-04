@@ -7,10 +7,10 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 
 double sigma2_epsilon_update(arma::vec y,
+                             arma::vec mean_temp,
                              arma::vec sample_size,
                              double alpha_sigma2_epsilon,
-                             double beta_sigma2_epsilon,
-                             arma::vec mean_temp){
+                             double beta_sigma2_epsilon){
 
 double alpha_sigma2_epsilon_update = 0.50*sum(sample_size) + 
                                      alpha_sigma2_epsilon;

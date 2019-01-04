@@ -9,9 +9,9 @@ using namespace Rcpp;
 arma::vec w0_update(arma::vec y,
                     arma::vec mean_temp,
                     Rcpp::List lagged_covars,
+                    double sigma2_epsilon,
                     double A11,
                     double A21,
-                    double sigma2_epsilon,
                     arma::mat Sigma0_inv){
   
 arma::vec lc2 = lagged_covars[1];

@@ -10,28 +10,52 @@ using namespace Rcpp;
 Rcpp::List SpGPCW(int mcmc_samples,
                   arma::vec y,
                   arma::mat z,
+                  arma::vec sample_size,
                   arma::mat spatial_dists,
                   arma::mat neighbors,
                   double metrop_var_A11_trans,
                   double metrop_var_A22_trans,
-                  double metrop_var_phi0_trans,
-                  double metrop_var_phi1_trans,
                   double metrop_var_mu,
                   arma::vec metrop_var_alpha,
+                  double metrop_var_phi0_trans,
+                  double metrop_var_phi1_trans,
                   Rcpp::Nullable<double> alpha_sigma2_epsilon_prior = R_NilValue,
                   Rcpp::Nullable<double> beta_sigma2_epsilon_prior = R_NilValue,
                   Rcpp::Nullable<double> sigma2_beta_prior = R_NilValue,
                   Rcpp::Nullable<double> sigma2_A_prior = R_NilValue,
-                  Rcpp::Nullable<double> alpha_phi0_prior = R_NilValue,
-                  Rcpp::Nullable<double> beta_phi0_prior = R_NilValue,
-                  Rcpp::Nullable<double> alpha_phi1_prior = R_NilValue,
-                  Rcpp::Nullable<double> beta_phi1_prior = R_NilValue
                   Rcpp::Nullable<double> sigma2_mu_prior = R_NilValue,
                   Rcpp::Nullable<double> alpha_tau2_prior = R_NilValue,
                   Rcpp::Nullable<double> beta_tau2_prior = R_NilValue,
-                  ){
+                  Rcpp::Nullable<double> alpha_phi0_prior = R_NilValue,
+                  Rcpp::Nullable<double> beta_phi0_prior = R_NilValue,
+                  Rcpp::Nullable<double> alpha_phi1_prior = R_NilValue,
+                  Rcpp::Nullable<double> beta_phi1_prior = R_NilValue,
+                  Rcpp::Nullable<double> sigma2_epsilon_init = R_NilValue,
+                  Rcpp::Nullable<double> beta0_init = R_NilValue,
+                  Rcpp::Nullable<double> beta1_init = R_NilValue,
+                  Rcpp::Nullable<double> A11_init = R_NilValue,
+                  Rcpp::Nullable<double> A22_init = R_NilValue,
+                  Rcpp::Nullable<double> A21_init = R_NilValue,
+                  Rcpp::Nullable<double> mu_init = R_NilValue,
+                  Rcpp::Nullable<Rcpp::NumericVector> alpha_init = R_NilValue,
+                  Rcpp::Nullable<double> tau2_init = R_NilValue,
+                  Rcpp::Nullable<Rcpp::NumericVector> w0_init = R_NilValue,
+                  Rcpp::Nullable<double> phi0_init = R_NilValue,
+                  Rcpp::Nullable<Rcpp::NumericVector> w1_init = R_NilValue,
+                  Rcpp::Nullable<double> phi1_init = R_NilValue){
 
 //Defining Parameters and Quantities of Interest
+int n = y.size();
+int m = z.n_rows;
+int L = z.n_cols;
+arma::mat Dw(m, m); Dw.fill(0);
+for(int j = 0; j < m; ++ j){
+   Dw(j, j) = sum(neighbors.row(j));
+   } 
+arma::mat CAR = Dw - 
+                neighbors;
+int G = 1;  //G Always Equal to One in this Case (One Island because of Inverse Distance Weighting)
+
 arma::vec sigma2_epsilon(mcmc_samples); sigma2_epsilon.fill(0.00);
 arma::vec beta0(mcmc_samples); beta0.fill(0.00);
 arma::vec beta1(mcmc_samples); beta1.fill(0.00);
@@ -39,272 +63,383 @@ arma::vec A11(mcmc_samples); A11.fill(0.00);
 arma::vec A22(mcmc_samples); A22.fill(0.00);
 arma::vec A21(mcmc_samples); A21.fill(0.00);
 arma::vec mu(mcmc_samples); mu.fill(0.00);
-arma::mat alpha(z.n_rows, mcmc_samples); alpha.fill(0.00);
+arma::mat alpha(m, mcmc_samples); alpha.fill(0.00);
 arma::vec tau2(mcmc_samples); tau2.fill(0.00);
-arma::mat w0(y.size(), mcmc_samples); w0.fill(0.00);
+arma::mat w0(n, mcmc_samples); w0.fill(0.00);
 arma::vec phi0(mcmc_samples); phi0.fill(0.00);
-arma::mat w1(y.size(), mcmc_samples); w1.fill(0.00);
+arma::mat w1(n, mcmc_samples); w1.fill(0.00);
 arma::vec phi1(mcmc_samples); phi1.fill(0.00);
 arma::vec neg_two_loglike(mcmc_samples); neg_two_loglike.fill(0.00);
 
 //Prior Information
+double alpha_sigma2_epsilon = 3.00;
+if(alpha_sigma2_epsilon_prior.isNotNull()){
+  alpha_sigma2_epsilon = Rcpp::as<double>(alpha_sigma2_epsilon_prior);
+  }
+
+double beta_sigma2_epsilon = 2.00;
+if(beta_sigma2_epsilon_prior.isNotNull()){
+  beta_sigma2_epsilon = Rcpp::as<double>(beta_sigma2_epsilon_prior);
+  }
+
 double sigma2_beta = 10000.00;
 if(sigma2_beta_prior.isNotNull()){
   sigma2_beta = Rcpp::as<double>(sigma2_beta_prior);
   }
 
-double alpha_sigma2_theta = 3.00;
-if(alpha_sigma2_theta_prior.isNotNull()){
-  alpha_sigma2_theta = Rcpp::as<double>(alpha_sigma2_theta_prior);
-  }
-  
-double beta_sigma2_theta = 2.00;
-if(beta_sigma2_theta_prior.isNotNull()){
-  beta_sigma2_theta = Rcpp::as<double>(beta_sigma2_theta_prior);
+double sigma2_A = 1.00;
+if(sigma2_A_prior.isNotNull()){
+  sigma2_A = Rcpp::as<double>(sigma2_A_prior);
   }
 
-double a_rho = 0.00;
-if(a_rho_prior.isNotNull()){
-  a_rho = Rcpp::as<double>(a_rho_prior);
+double sigma2_mu = 1.00;
+if(sigma2_mu_prior.isNotNull()){
+  sigma2_mu = Rcpp::as<double>(sigma2_mu_prior);
   }
 
-double b_rho = 1.00;
-if(b_rho_prior.isNotNull()){
-  b_rho = Rcpp::as<double>(b_rho_prior);
+double alpha_tau2 = 3.00;
+if(alpha_tau2_prior.isNotNull()){
+  alpha_tau2 = Rcpp::as<double>(alpha_tau2_prior);
   }
 
-double alpha_sigma2_eta = 3.00;
-if(alpha_sigma2_eta_prior.isNotNull()){
-  alpha_sigma2_eta = Rcpp::as<double>(alpha_sigma2_eta_prior);
+double beta_tau2 = 2.00;
+if(beta_tau2_prior.isNotNull()){
+  beta_tau2 = Rcpp::as<double>(beta_tau2_prior);
   }
 
-double beta_sigma2_eta = 2.00;
-if(beta_sigma2_eta_prior.isNotNull()){
-  beta_sigma2_eta = Rcpp::as<double>(beta_sigma2_eta_prior);
+double alpha_phi0 = 1.00;
+if(alpha_phi0_prior.isNotNull()){
+  alpha_phi0 = Rcpp::as<double>(alpha_phi0_prior);
   }
 
-double a_phi = log(0.9999)/(-(z.n_cols - 1));  
-if(a_phi_prior.isNotNull()){
-  a_phi = Rcpp::as<double>(a_phi_prior);
+double beta_phi0 = 1.00;
+if(beta_phi0_prior.isNotNull()){
+  beta_phi0 = Rcpp::as<double>(beta_phi0_prior);
   }
-  
-double b_phi = log(0.0001)/(-1);
-if(b_phi_prior.isNotNull()){
-  b_phi = Rcpp::as<double>(b_phi_prior);
+
+double alpha_phi1 = 1.00;
+if(alpha_phi1_prior.isNotNull()){
+  alpha_phi1 = Rcpp::as<double>(alpha_phi1_prior);
+  }
+
+double beta_phi1 = 1.00;
+if(beta_phi1_prior.isNotNull()){
+  beta_phi1 = Rcpp::as<double>(beta_phi1_prior);
   }
 
 //Initial Values
-beta.col(0).fill(0.00);
-if(beta_init.isNotNull()){
-  beta.col(0) = Rcpp::as<arma::vec>(beta_init);
+sigma2_epsilon(0) = 1.00;
+if(sigma2_epsilon_init.isNotNull()){
+  sigma2_epsilon(0) = Rcpp::as<double>(sigma2_epsilon_init);
   }
 
-theta.col(0).fill(0.00);
-if(theta_init.isNotNull()){
-  theta.col(0) = Rcpp::as<arma::vec>(theta_init);
+beta0(0) = 0.00;
+if(beta0_init.isNotNull()){
+  beta0(0) = Rcpp::as<double>(beta0_init);
   }
 
-sigma2_theta(0) = 1.00;
-if(sigma2_theta_init.isNotNull()){
-  sigma2_theta(0) = Rcpp::as<double>(sigma2_theta_init);
+beta1(0) = 0.00;
+if(beta1_init.isNotNull()){
+  beta1(0) = Rcpp::as<double>(beta1_init);
   }
 
-arma::mat eta_temp(neighbors.n_cols, z.n_cols); eta_temp.fill(0.00);
-if(eta_init.isNotNull()){
-  eta_temp = Rcpp::as<arma::mat>(eta_init);
-  }
-eta[0] = eta_temp;
-
-rho(0) = (b_rho - a_rho)*0.50;
-if(rho_init.isNotNull()){
-  rho(0) = Rcpp::as<double>(rho_init);
+A11(0) = 1.00;
+if(A11_init.isNotNull()){
+  A11(0) = Rcpp::as<double>(A11_init);
   }
 
-sigma2_eta(0) = 1.00;
-if(sigma2_eta_init.isNotNull()){
-  sigma2_eta(0) = Rcpp::as<double>(sigma2_eta_init);
+A22(0) = 1.00;
+if(A22_init.isNotNull()){
+  A22(0) = Rcpp::as<double>(A22_init);
   }
 
-phi(0) = (b_phi - a_phi)*0.01;
-if(phi_init.isNotNull()){
-  phi(0) = Rcpp::as<double>(phi_init);
+A21(0) = 0.00;
+if(A21_init.isNotNull()){
+  A21(0) = Rcpp::as<double>(A21_init);
   }
 
-Rcpp::List temporal_corr_info = temporal_corr_fun(z.n_cols, phi(0));
+mu(0) = 0.00;
+if(mu_init.isNotNull()){
+  mu(0) = Rcpp::as<double>(mu_init);
+  }
+
+alpha.col(0).fill(0.00);
+if(alpha_init.isNotNull()){
+  alpha.col(0) = Rcpp::as<arma::vec>(alpha_init);
+  }
+
+tau2(0) = 1.00;
+if(tau2_init.isNotNull()){
+  tau2(0) = Rcpp::as<double>(tau2_init);
+  }
+
+w0.col(0).fill(0.00);
+if(w0_init.isNotNull()){
+  w0.col(0) = Rcpp::as<arma::vec>(w0_init);
+  }
+
+phi0(0) = 1.00;
+if(phi0_init.isNotNull()){
+  phi0(0) = Rcpp::as<double>(phi0_init);
+  }
+
+Rcpp::List spatial_corr0_info = spatial_corr_fun(phi0(0), 
+                                                 spatial_dists);
+
+w1.col(0).fill(0.00);
+if(w1_init.isNotNull()){
+  w1.col(0) = Rcpp::as<arma::vec>(w1_init);
+  }
+
+phi1(0) = 1.00;
+if(phi1_init.isNotNull()){
+  phi1(0) = Rcpp::as<double>(phi1_init);
+  }
+
+Rcpp::List spatial_corr1_info = spatial_corr_fun(phi1(0), 
+                                                 spatial_dists);
+
+Rcpp::List lagged_covars = construct_lagged_covars(z,
+                                                   mu(0), 
+                                                   alpha.col(0),
+                                                   sample_size);
+arma::vec lc1 = lagged_covars(0);
+arma::vec lc2 = lagged_covars(1);
+
+arma::uvec keep5(5); keep5(0) = 0; keep5(1) = 1; keep5(2) = 2; keep5(3) = 3; keep5(4) = 4;
+arma::vec mean_temp = construct_mean(beta0(0), 
+                                     beta1(0),
+                                     A11(0),
+                                     A22(0),
+                                     A21(0),
+                                     w0.col(0),
+                                     w1.col(0),
+                                     diagmat(lc1),
+                                     keep5,
+                                     sample_size);
+
 neg_two_loglike(0) = neg_two_loglike_update(y,
-                                            x,
-                                            z,
-                                            site_id,
-                                            beta.col(0),
-                                            theta.col(0),
-                                            eta[0]);
-
-//Non Spatial Option (\rho fixed at 0):
-//rho_zero = 0; Spatial
-//rho_zero = Any Other Integer (Preferably One); Non Spatial
-int rho_zero = 0;
-if(rho_zero_indicator.isNotNull()){
-  rho_zero = Rcpp::as<int>(rho_zero_indicator);
-  }
+                                            mean_temp,
+                                            sigma2_epsilon(0));
 
 //Metropolis Settings
-int acctot_rho_trans = 0;
-int acctot_phi_trans = 0;
+int acctot_A11_trans = 0;
+int acctot_A22_trans = 0;
+int acctot_mu = 0;
+arma::vec acctot_alpha(m); acctot_alpha.fill(0);
+int acctot_phi0_trans = 0;
+int acctot_phi1_trans = 0;
 
 //Main Sampling Loop
 for(int j = 1; j < mcmc_samples; ++j){
   
    //sigma2_epsilon Update
+   arma::vec mean_temp = construct_mean(beta0(j-1), 
+                                        beta1(j-1),
+                                        A11(j-1),
+                                        A22(j-1),
+                                        A21(j-1),
+                                        w0.col(j-1),
+                                        w1.col(j-1),
+                                        diagmat(lc1),
+                                        keep5,
+                                        sample_size);
+  
    sigma2_epsilon(j) = sigma2_epsilon_update(y,
+                                             mean_temp,
                                              sample_size,
                                              alpha_sigma2_epsilon,
-                                             beta_sigma2_epsilon,
-                                             mean_temp);
+                                             beta_sigma2_epsilon);
   
    //beta0 Update
+   arma::uvec keep4(4); keep4(0) = 1; keep4(1) = 2; keep4(2) = 3; keep4(3) = 4;
+   mean_temp = construct_mean(beta0(j-1), 
+                              beta1(j-1),
+                              A11(j-1),
+                              A22(j-1),
+                              A21(j-1),
+                              w0.col(j-1),
+                              w1.col(j-1),
+                              diagmat(lc1),
+                              keep4,
+                              sample_size);
+   
    beta0(j) = beta0_update(y,
-                           sample_size,
-                           sigma2_beta,
                            mean_temp, 
-                           sigma2_epsilon(j));
+                           sigma2_epsilon(j),
+                           sample_size,
+                           sigma2_beta);
    
    //beta1 Update
+   keep4(0) = 0; keep4(1) = 2; keep4(2) = 3; keep4(3) = 4;
+   mean_temp = construct_mean(beta0(j), 
+                              beta1(j-1),
+                              A11(j-1),
+                              A22(j-1),
+                              A21(j-1),
+                              w0.col(j-1),
+                              w1.col(j-1),
+                              diagmat(lc1),
+                              keep4,
+                              sample_size);
    beta1(j) = beta1_update(y,
-                           sample_size,
-                           sigma2_beta,
                            mean_temp,
                            lagged_covars,
-                           sigma2_epsilon(j));
+                           sigma2_epsilon(j),
+                           sample_size,
+                           sigma2_beta);
+   
+   //A11 Update
+   Rcpp::List A11_output = A11_update(y,
+                                      A11(j-1),
+                                      sigma2_epsilon(j),
+                                      beta0(j),
+                                      beta1(j),
+                                      A22(j-1),
+                                      A21(j-1),
+                                      w0.col(j-1),
+                                      w1.col(j-1),
+                                      lagged_covars,
+                                      keep5,
+                                      sample_size,
+                                      sigma2_A,
+                                      metrop_var_A11_trans,
+                                      acctot_A11_trans);
+   
+   A11(j) = A11_output[0];
+   acctot_A11_trans = A11_output[1];
+   
+   //A22 Update
+   Rcpp::List A22_output = A22_update(y,
+                                      A22(j-1),
+                                      sigma2_epsilon(j),
+                                      beta0(j),
+                                      beta1(j),
+                                      A11(j),
+                                      A21(j-1),
+                                      w0.col(j-1),
+                                      w1.col(j-1),
+                                      lagged_covars,
+                                      keep5,
+                                      sample_size,
+                                      sigma2_A,
+                                      metrop_var_A11_trans,
+                                      acctot_A11_trans);
+   
+   A22(j) = A22_output[0];
+   acctot_A22_trans = A22_output[1];
    
    //A21 Update
-   A21(j) = A21_update(sigma2_A,
+   keep4(0) = 0; keep4(1) = 1; keep4(2) = 2; keep4(3) = 5;
+   mean_temp = construct_mean(beta0(j), 
+                              beta1(j),
+                              A11(j),
+                              A22(j),
+                              A21(j-1),
+                              w0.col(j-1),
+                              w1.col(j-1),
+                              diagmat(lc1),
+                              keep4,
+                              sample_size);
+   
+   A21(j) = A21_update(y,
                        mean_temp,
                        lagged_covars,
                        sigma2_epsilon(j),
-                       w0.col(j));
+                       w0.col(j),
+                       sigma2_A);
    
    //tau2 Update
    tau2(j) = tau2_update(G,
                          CAR,
+                         alpha.col(j),
                          alpha_tau2,
-                         beta_tau2,
-                         alpha.col(j));
+                         beta_tau2);
    
    //w0 Update
+   arma::uvec keep3(3); keep3(0) = 0; keep3(1) = 1; keep3(2) = 4;
+   mean_temp = construct_mean(beta0(j), 
+                              beta1(j),
+                              A11(j),
+                              A22(j),
+                              A21(j),
+                              w0.col(j-1),
+                              w1.col(j-1),
+                              diagmat(lc1),
+                              keep3,
+                              sample_size);
+   
    w0.col(j) = w0_update(y,
                          mean_temp,
                          lagged_covars,
+                         sigma2_epsilon(j),
                          A11(j),
                          A21(j),
-                         sigma2_epsilon(j),
-                         Sigma0_inv);
+                         spatial_corr0_info[0]);
   
+   //phi0 Update
+   Rcpp::List phi0_output = phi_update(phi0(j-1),
+                                       spatial_dists,
+                                       w0,
+                                       spatial_corr0_info,
+                                       alpha_phi0,
+                                       beta_phi0,
+                                       metrop_var_phi0_trans,
+                                       acctot_phi0_trans);
+  
+   phi0(j) = phi0_output[0];
+   acctot_phi0_trans = phi0_output[1];
+   spatial_corr0_info = phi0_output[2];
+   
    //w1 Update
+   keep4(0) = 0; keep4(1) = 1; keep4(2) = 2; keep4(3) = 3;
+   mean_temp = construct_mean(beta0(j), 
+                              beta1(j),
+                              A11(j),
+                              A22(j),
+                              A21(j),
+                              w0.col(j),
+                              w1.col(j-1),
+                              diagmat(lc1),
+                              keep4,
+                              sample_size);
+   
    w1.col(j) = w1_update(y,
                          mean_temp,
                          lagged_covars,
-                         A22(j),
                          sigma2_epsilon(j),
-                         Sigma1_inv);
+                         A22(j),
+                         spatial_corr1_info[0]);
+   
+   //phi1 Update
+   Rcpp::List phi1_output = phi_update(phi1(j-1),
+                                       spatial_dists,
+                                       w1,
+                                       spatial_corr1_info,
+                                       alpha_phi1,
+                                       beta_phi1,
+                                       metrop_var_phi1_trans,
+                                       acctot_phi1_trans);
+   
+   phi1(j) = phi1_output[0];
+   acctot_phi1_trans = phi1_output[1];
+   spatial_corr1_info = phi1_output[2];
    
    //neg_two_loglike Update
+   mean_temp = construct_mean(beta0(j), 
+                              beta1(j),
+                              A11(j),
+                              A22(j),
+                              A21(j),
+                              w0.col(j),
+                              w1.col(j),
+                              diagmat(lc1),
+                              keep5,
+                              sample_size);
+   
    neg_two_loglike(j) = neg_two_loglike_update(y,
                                                mean_temp,
                                                sigma2_epsilon(j));
-  
-   //beta Update
-   beta.col(j) = beta_update(x, 
-                             z,
-                             site_id,
-                             sigma2_beta,
-                             w,
-                             gamma,
-                             theta.col(j-1),
-                             eta[j-1]);
-   
-   //theta Update
-   theta.col(j) = theta_update(x, 
-                               z,
-                               site_id,
-                               w,
-                               gamma,
-                               beta.col(j),
-                               eta[j-1],
-                               sigma2_theta(j-1),
-                               temporal_corr_info(0));
-   
-   //sigma2_theta Update
-   sigma2_theta(j) = sigma2_theta_update(theta.col(j),
-                                         temporal_corr_info(0),
-                                         alpha_sigma2_theta,
-                                         beta_sigma2_theta);
-   
-   //eta Update
-   eta[j] = eta_update(eta[j-1],
-                       x, 
-                       z,
-                       site_id,
-                       neighbors,
-                       w,
-                       gamma,
-                       beta.col(j),
-                       theta.col(j),
-                       rho(j-1),
-                       sigma2_eta(j-1),
-                       temporal_corr_info[0]);
-  
-   //rho Update
-   //Only if rho_zero = 0
-   rho(j) = 0;
-   if(rho_zero == 0){
-     Rcpp::List rho_output = rho_update(rho(j-1),
-                                        neighbors,
-                                        eta[j],
-                                        sigma2_eta(j-1),
-                                        temporal_corr_info[0],
-                                        a_rho,
-                                        b_rho,
-                                        metrop_var_rho_trans,
-                                        acctot_rho_trans);
-   
-     rho(j) = rho_output[0];
-     acctot_rho_trans = rho_output[1];
-     }
-   
-   //sigma2_eta Update
-   sigma2_eta(j) = sigma2_eta_update(neighbors,
-                                     eta[j],
-                                     rho(j),
-                                     temporal_corr_info(0),
-                                     alpha_sigma2_eta,
-                                     beta_sigma2_eta);
-   
-   //phi Update
-   Rcpp::List phi_output = phi_update(phi(j-1),
-                                      neighbors,
-                                      theta.col(j),
-                                      sigma2_theta(j),
-                                      eta[j],
-                                      rho(j),
-                                      sigma2_eta(j),
-                                      temporal_corr_info,
-                                      a_phi,
-                                      b_phi,
-                                      metrop_var_phi_trans,
-                                      acctot_phi_trans);
-     
-   phi(j) = phi_output[0];
-   acctot_phi_trans = phi_output[1];
-   temporal_corr_info = phi_output[2];
-
-   //neg_two_loglike Update
-   neg_two_loglike(j) = neg_two_loglike_update(y,
-                                               x,
-                                               z,
-                                               site_id,
-                                               beta.col(j),
-                                               theta.col(j),
-                                               eta[j]);
    
    //Progress
    if((j + 1) % 10 == 0){ 

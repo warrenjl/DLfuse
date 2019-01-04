@@ -6,12 +6,12 @@ using namespace Rcpp;
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 
-Rcpp::List phi_update(arma::mat spatial_dists,
-                      double alpha_phi,
-                      double beta_phi,
-                      double phi_old,
+Rcpp::List phi_update(double phi_old,
+                      arma::mat spatial_dists,
                       arma::vec w,
                       Rcpp::List spatial_corr_info,
+                      double alpha_phi,
+                      double beta_phi,
                       double metrop_var_phi_trans,
                       int acctot_phi_trans){
 
