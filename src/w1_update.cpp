@@ -13,11 +13,11 @@ arma::vec w1_update(arma::vec y,
                     double A22,
                     arma::mat Sigma1_inv){
   
-arma::vec lc2 = lagged_covars[1];
+arma::vec lc1 = lagged_covars[0];
   
-arma::mat cov_w1 = inv_sympd((A22*A22)*diagmat(lc2%lc2)/sigma2_epsilon + Sigma1_inv);
+arma::mat cov_w1 = inv_sympd((A22*A22)*diagmat(lc1%lc1)/sigma2_epsilon + Sigma1_inv);
 
-arma::vec mean_w1 = cov_w1*(A22*(lc2%(y - mean_temp)))/sigma2_epsilon;
+arma::vec mean_w1 = cov_w1*(A22*(lc1%(y - mean_temp)))/sigma2_epsilon;
   
 arma::mat ind_norms = arma::randn(1, y.size());
 arma::vec w1 = mean_w1 + 

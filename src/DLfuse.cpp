@@ -7,7 +7,7 @@ using namespace Rcpp;
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 
-Rcpp::List SpGPCW(int mcmc_samples,
+Rcpp::List DLfuse(int mcmc_samples,
                   arma::vec y,
                   arma::mat z,
                   arma::vec sample_size,
@@ -47,7 +47,6 @@ Rcpp::List SpGPCW(int mcmc_samples,
 //Defining Parameters and Quantities of Interest
 int n = y.size();
 int m = z.n_rows;
-int L = z.n_cols;
 arma::mat Dw(m, m); Dw.fill(0);
 for(int j = 0; j < m; ++ j){
    Dw(j, j) = sum(neighbors.row(j));
@@ -292,6 +291,7 @@ for(int j = 1; j < mcmc_samples; ++j){
    //A11 Update
    Rcpp::List A11_output = A11_update(y,
                                       A11(j-1),
+                                      lagged_covars,
                                       sigma2_epsilon(j),
                                       beta0(j),
                                       beta1(j),
@@ -299,7 +299,6 @@ for(int j = 1; j < mcmc_samples; ++j){
                                       A21(j-1),
                                       w0.col(j-1),
                                       w1.col(j-1),
-                                      lagged_covars,
                                       keep5,
                                       sample_size,
                                       sigma2_A,
@@ -312,6 +311,7 @@ for(int j = 1; j < mcmc_samples; ++j){
    //A22 Update
    Rcpp::List A22_output = A22_update(y,
                                       A22(j-1),
+                                      lagged_covars,
                                       sigma2_epsilon(j),
                                       beta0(j),
                                       beta1(j),
@@ -319,7 +319,6 @@ for(int j = 1; j < mcmc_samples; ++j){
                                       A21(j-1),
                                       w0.col(j-1),
                                       w1.col(j-1),
-                                      lagged_covars,
                                       keep5,
                                       sample_size,
                                       sigma2_A,
@@ -330,7 +329,7 @@ for(int j = 1; j < mcmc_samples; ++j){
    acctot_A22_trans = A22_output[1];
    
    //A21 Update
-   keep4(0) = 0; keep4(1) = 1; keep4(2) = 2; keep4(3) = 5;
+   keep4(0) = 0; keep4(1) = 1; keep4(2) = 2; keep4(3) = 4;
    mean_temp = construct_mean(beta0(j), 
                               beta1(j),
                               A11(j),
@@ -348,6 +347,55 @@ for(int j = 1; j < mcmc_samples; ++j){
                        sigma2_epsilon(j),
                        w0.col(j),
                        sigma2_A);
+   
+   //mu Update
+   Rcpp::List mu_output = mu_update(y,
+                                    z,
+                                    mu(j-1),
+                                    lagged_covars,
+                                    sigma2_epsilon(j),
+                                    beta0(j),
+                                    beta1(j),
+                                    A11(j),
+                                    A22(j),
+                                    A21(j),
+                                    alpha.col(j-1),
+                                    w0.col(j-1),
+                                    w1.col(j-1),
+                                    keep5,
+                                    sample_size,
+                                    sigma2_mu,
+                                    metrop_var_mu,
+                                    acctot_mu);
+   
+   mu(j) = mu_output[0];
+   acctot_mu = mu_output[1];
+   lagged_covars = mu_output[2];
+   
+   //alpha Update
+   Rcpp::List alpha_output = alpha_update(y,
+                                          z,
+                                          neighbors,
+                                          alpha.col(j-1),
+                                          lagged_covars,
+                                          sigma2_epsilon(j),
+                                          beta0(j),
+                                          beta1(j),
+                                          A11(j),
+                                          A22(j),
+                                          A21(j),
+                                          mu(j),
+                                          tau2(j-1),
+                                          w0.col(j-1),
+                                          w1.col(j-1),
+                                          keep5,
+                                          sample_size,
+                                          metrop_var_alpha,
+                                          acctot_alpha);   
+   
+   alpha.col(j) = as<arma::vec>(alpha_output[0]);
+   acctot_alpha = as<arma::vec>(alpha_output[1]);
+   lagged_covars = alpha_output[2];
    
    //tau2 Update
    tau2(j) = tau2_update(G,
@@ -380,7 +428,7 @@ for(int j = 1; j < mcmc_samples; ++j){
    //phi0 Update
    Rcpp::List phi0_output = phi_update(phi0(j-1),
                                        spatial_dists,
-                                       w0,
+                                       w0.col(j),
                                        spatial_corr0_info,
                                        alpha_phi0,
                                        beta_phi0,
@@ -414,7 +462,7 @@ for(int j = 1; j < mcmc_samples; ++j){
    //phi1 Update
    Rcpp::List phi1_output = phi_update(phi1(j-1),
                                        spatial_dists,
-                                       w1,
+                                       w1.col(j),
                                        spatial_corr1_info,
                                        alpha_phi1,
                                        beta_phi1,
@@ -449,27 +497,45 @@ for(int j = 1; j < mcmc_samples; ++j){
    if(((j + 1) % int(round(mcmc_samples*0.10)) == 0)){
      double completion = round(100*((j + 1)/(double)mcmc_samples));
      Rcpp::Rcout << "Progress: " << completion << "%" << std::endl;
-     if(rho_zero == 0){
-       double accrate_rho_trans = round(100*(acctot_rho_trans/(double)j));
-       Rcpp::Rcout << "rho Acceptance: " << accrate_rho_trans << "%" << std::endl;
-       }
-     double accrate_phi_trans = round(100*(acctot_phi_trans/(double)j));
-     Rcpp::Rcout << "phi Acceptance: " << accrate_phi_trans << "%" << std::endl;
+     double accrate_A11_trans = round(100*(acctot_A11_trans/(double)j));
+     Rcpp::Rcout << "A11 Acceptance: " << accrate_A11_trans << "%" << std::endl;
+     double accrate_A22_trans = round(100*(acctot_A22_trans/(double)j));
+     Rcpp::Rcout << "A22 Acceptance: " << accrate_A22_trans << "%" << std::endl;
+     double accrate_mu = round(100*(acctot_mu/(double)j));
+     Rcpp::Rcout << "mu Acceptance: " << accrate_mu << "%" << std::endl;
+     double accrate_alpha_min = round(100*(min(acctot_alpha)/(double)j));
+     Rcpp::Rcout << "alpha Acceptance (min): " << accrate_alpha_min << "%" << std::endl;
+     double accrate_alpha_max = round(100*(max(acctot_alpha)/(double)j));
+     Rcpp::Rcout << "alpha Acceptance (max): " << accrate_alpha_max << "%" << std::endl;
+     double accrate_phi0_trans = round(100*(acctot_phi0_trans/(double)j));
+     Rcpp::Rcout << "phi0 Acceptance: " << accrate_phi0_trans << "%" << std::endl;
+     double accrate_phi1_trans = round(100*(acctot_phi1_trans/(double)j));
+     Rcpp::Rcout << "phi1 Acceptance: " << accrate_phi1_trans << "%" << std::endl;
      Rcpp::Rcout << "*******************" << std::endl;
      }
   
    }
                                   
-return Rcpp::List::create(Rcpp::Named("beta") = beta,
-                          Rcpp::Named("theta") = theta,
-                          Rcpp::Named("sigma2_theta") = sigma2_theta,
-                          Rcpp::Named("eta") = eta,
-                          Rcpp::Named("rho") = rho,
-                          Rcpp::Named("sigma2_eta") = sigma2_eta,
-                          Rcpp::Named("phi") = phi,
+return Rcpp::List::create(Rcpp::Named("sigma2_epsilon") = sigma2_epsilon,
+                          Rcpp::Named("beta0") = beta0,
+                          Rcpp::Named("beta1") = beta1,
+                          Rcpp::Named("A11") = A11,
+                          Rcpp::Named("A22") = A22,
+                          Rcpp::Named("A21") = A21,
+                          Rcpp::Named("mu") = mu,
+                          Rcpp::Named("alpha") = alpha,
+                          Rcpp::Named("tau2") = tau2,
+                          Rcpp::Named("w0") = w0,
+                          Rcpp::Named("phi0") = phi0,
+                          Rcpp::Named("w1") = w1,
+                          Rcpp::Named("phi1") = phi1,
                           Rcpp::Named("neg_two_loglike") = neg_two_loglike,
-                          Rcpp::Named("acctot_rho_trans") = acctot_rho_trans,
-                          Rcpp::Named("acctot_phi_trans") = acctot_phi_trans);
+                          Rcpp::Named("acctot_A11_trans") = acctot_A11_trans,
+                          Rcpp::Named("acctot_A22_trans") = acctot_A22_trans,
+                          Rcpp::Named("acctot_mu") = acctot_mu,
+                          Rcpp::Named("acctot_alpha") = acctot_alpha,
+                          Rcpp::Named("acctot_phi0_trans") = acctot_phi0_trans,
+                          Rcpp::Named("acctot_phi1_trans") = acctot_phi1_trans);
 
 }
 

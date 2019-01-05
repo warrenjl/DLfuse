@@ -9,6 +9,7 @@ using namespace Rcpp;
 Rcpp::List mu_update(arma::vec y,
                      arma::mat z,
                      double mu_old,
+                     Rcpp::List lagged_covars,
                      double sigma2_epsilon,
                      double beta0,
                      double beta1,
@@ -18,7 +19,6 @@ Rcpp::List mu_update(arma::vec y,
                      arma::vec alpha_old,
                      arma::vec w0_old,
                      arma::vec w1_old,
-                     Rcpp::List lagged_covars,
                      arma::uvec keep5,
                      arma::vec sample_size,
                      double sigma2_mu,
@@ -108,46 +108,3 @@ return Rcpp::List::create(Rcpp::Named("mu") = mu,
                           Rcpp::Named("lagged_covars") = lagged_covars);
 
 }
-
-
-  old<-sum(dnorm(y,
-                 mean=mean_temp_old,
-                 sd=sqrt(sigma2_epsilon[i]),
-                 log=TRUE)) +
-                   dnorm(mu[i-1],
-                         mean=0,
-                         sd=sqrt(sigma2_mu),
-                         log=TRUE)
-  
-  mu[i]<-rnorm(n=1, 
-               mean=mu[i-1], 
-                      sd=mu_metrop_sd) 
-  lagged_covars<-construct_lagged_covars(mu[i],
-                                         alpha[(i-1),])
-  mean_temp<-construct_mean(beta0[i], 
-                            beta1[i],
-                                 A11[i],
-                                    A22[i],
-                                       A21[i],
-                                          w0[(i-1),],
-                                            w1[(i-1),],
-                                              diag(lagged_covars[[1]]),
-                                              c(1:5))    
-  new<-sum(dnorm(y,
-                 mean=mean_temp,
-                 sd=sqrt(sigma2_epsilon[i]),
-                 log=TRUE)) +
-                   dnorm(mu[i],
-                         mean=0,
-                         sd=sqrt(sigma2_mu),
-                         log=TRUE)
-  
-  ratio<-exp(new - old)   
-  acc<-1
-if(ratio < runif(n=1, min=0, max=1)){
-  mu[i]<-mu[i-1]
-  lagged_covars<-lagged_covars_old
-  acc<-0
-}
-mu_acctot<-mu_acctot +
-  acc                 

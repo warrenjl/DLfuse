@@ -34,7 +34,7 @@ int counter = 0;
 for(int j = 0; j < m; ++ j){
    int ss = sample_size(j);
    for(int k = 0; k < ss; ++ k){
-      lagged_covars_full[counter] = lagged_covars_reduced[j];
+      lagged_covars_full(counter) = lagged_covars_reduced(j);
       ++ counter;
       }
    }
