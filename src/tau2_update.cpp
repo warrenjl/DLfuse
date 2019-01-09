@@ -11,8 +11,10 @@ double tau2_update(int G,
                    arma::vec alpha,
                    double alpha_tau2,
                    double beta_tau2){
+  
+int m = alpha.size();
 
-double alpha_tau2_update = 0.50*(alpha.size() - G) + 
+double alpha_tau2_update = 0.50*(m - G) + 
                            alpha_tau2;
 
 double beta_tau2_update = 0.50*dot(alpha, (CAR*alpha)) + 
