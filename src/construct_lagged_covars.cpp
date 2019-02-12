@@ -15,13 +15,12 @@ int L = z.n_cols;
 int m = z.n_rows;
 int n = sum(sample_size);
 arma::mat regression_weights(m, L); regression_weights.fill(0);
-for(int j = 0; j < L; ++ j){
-   for(int k = 0; k < m; ++ k){
-      regression_weights(k,j) = pow((R::pnorm(mu + alpha(j), 0, 1, 1, 0)), (j-1));
+for(int j = 0; j < m; ++ j){
+   for(int k = 0; k < L; ++ k){
+      regression_weights(j,k) = pow((R::pnorm(mu + alpha(j), 0, 1, 1, 0)), k);
       }
-   regression_weights.col(j) = regression_weights.col(j)/sum(regression_weights.col(j));
+   regression_weights.row(j) = regression_weights.row(j)/sum(regression_weights.row(j));
    }
-
 
 arma::vec lagged_covars_reduced(m); lagged_covars_reduced.fill(0);
 arma::mat temp_mat = z%regression_weights;

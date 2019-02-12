@@ -14,8 +14,8 @@ double log_deter = 0.00;
 double sign = 0.00;     
 arma::mat spatial_corr(p_z, p_z); spatial_corr.fill(0.00);
 
-for(int j = 0; j < p_z; ++j){
-   for(int k = 0; k < p_z; ++k){
+for(int j = 0; j < p_z; ++ j){
+   for(int k = 0; k < p_z; ++ k){
       spatial_corr(j,k) = exp(-phi*spatial_dists(j,k));
       }
    }

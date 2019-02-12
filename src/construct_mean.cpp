@@ -28,7 +28,7 @@ mean_mat.col(3) = A21*(Omega*w0);
 mean_mat.col(4) = A22*(Omega*w1);
   
 arma::vec mean_vec(n); mean_vec.fill(0);
-for(int j = 0; j < n; ++j){
+for(int j = 0; j < n; ++ j){
   arma::vec temp_vec = trans(mean_mat.row(j));
   mean_vec(j) = sum(temp_vec.elem(keep));
   }

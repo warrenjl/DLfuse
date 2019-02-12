@@ -57,7 +57,7 @@ for(int j = 0; j < m; ++ j){
       }
    second = second +
             R::dnorm(alpha_old(j),
-                     (sum(neighbors.row(j)*alpha)/sum(neighbors.row(j))),
+                     (dot(neighbors.row(j), alpha)/sum(neighbors.row(j))),
                      sqrt(tau2_old/sum(neighbors.row(j))),
                      1);
 
@@ -92,7 +92,7 @@ for(int j = 0; j < m; ++ j){
      }
   first = first +
           R::dnorm(alpha(j),
-                   (sum(neighbors.row(j)*alpha)/sum(neighbors.row(j))),
+                   (dot(neighbors.row(j), alpha)/sum(neighbors.row(j))),
                    sqrt(tau2_old/sum(neighbors.row(j))),
                    1);
 

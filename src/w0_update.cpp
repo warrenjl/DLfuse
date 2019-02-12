@@ -26,6 +26,10 @@ arma::mat ind_norms = arma::randn(1, n);
 arma::vec w0 = mean_w0 + 
                trans(ind_norms*arma::chol(cov_w0));
 
+//Centering for Stability
+w0 = w0 -
+     mean(w0);
+
 return(w0);
 
 }

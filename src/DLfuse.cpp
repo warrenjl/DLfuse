@@ -1,5 +1,4 @@
 #include "RcppArmadillo.h"
-#include "RcppArmadillo.h"
 #include "DLfuse.h"
 using namespace arma;
 using namespace Rcpp;
@@ -42,7 +41,16 @@ Rcpp::List DLfuse(int mcmc_samples,
                   Rcpp::Nullable<Rcpp::NumericVector> w0_init = R_NilValue,
                   Rcpp::Nullable<double> phi0_init = R_NilValue,
                   Rcpp::Nullable<Rcpp::NumericVector> w1_init = R_NilValue,
-                  Rcpp::Nullable<double> phi1_init = R_NilValue){
+                  Rcpp::Nullable<double> phi1_init = R_NilValue,
+                  Rcpp::Nullable<int> collapse_indicator = R_NilValue){
+  
+//No Distributed Lags (Original Method)
+//collapse_indicator = 0; Full, Distributed Lag Model
+//collapse_indicator = Any Other Integer (Preferably One); No Distributed Lags, Original Model
+int collapse = 0;
+if(collapse_indicator.isNotNull()){
+  collapse = Rcpp::as<int>(collapse_indicator);
+  }
 
 //Defining Parameters and Quantities of Interest
 int n = y.size();
@@ -53,7 +61,7 @@ for(int j = 0; j < m; ++ j){
    } 
 arma::mat CAR = Dw - 
                 neighbors;
-int G = 1;  //G Always Equal to One in this Case (One Island because of Inverse Distance Weighting)
+int G = 1.00;  //G Always Equal to One in this Case (One Island because of Inverse Distance Weighting)
 
 arma::vec sigma2_epsilon(mcmc_samples); sigma2_epsilon.fill(0.00);
 arma::vec beta0(mcmc_samples); beta0.fill(0.00);
@@ -202,8 +210,17 @@ Rcpp::List lagged_covars = construct_lagged_covars(z,
                                                    mu(0), 
                                                    alpha.col(0),
                                                    sample_size);
-arma::vec lc1 = lagged_covars(0);
-arma::vec lc2 = lagged_covars(1);
+
+if(collapse != 0){
+  double negative_infinity = -std::numeric_limits<double>::infinity();
+  lagged_covars = construct_lagged_covars(z,
+                                          negative_infinity, 
+                                          alpha.col(0),
+                                          sample_size);
+  }
+  
+arma::vec lc1 = lagged_covars[0];
+arma::vec lc2 = lagged_covars[1];
 
 arma::uvec keep5(5); keep5(0) = 0; keep5(1) = 1; keep5(2) = 2; keep5(3) = 3; keep5(4) = 4;
 arma::vec mean_temp = construct_mean(beta0(0), 
@@ -230,7 +247,7 @@ int acctot_phi0_trans = 0;
 int acctot_phi1_trans = 0;
 
 //Main Sampling Loop
-for(int j = 1; j < mcmc_samples; ++j){
+for(int j = 1; j < mcmc_samples; ++ j){
   
    //sigma2_epsilon Update
    arma::vec mean_temp = construct_mean(beta0(j-1), 
@@ -281,6 +298,7 @@ for(int j = 1; j < mcmc_samples; ++j){
                               diagmat(lc1),
                               keep4,
                               sample_size);
+   
    beta1(j) = beta1_update(y,
                            mean_temp,
                            lagged_covars,
@@ -322,8 +340,8 @@ for(int j = 1; j < mcmc_samples; ++j){
                                       keep5,
                                       sample_size,
                                       sigma2_A,
-                                      metrop_var_A11_trans,
-                                      acctot_A11_trans);
+                                      metrop_var_A22_trans,
+                                      acctot_A22_trans);
    
    A22(j) = A22_output[0];
    acctot_A22_trans = A22_output[1];
@@ -345,65 +363,77 @@ for(int j = 1; j < mcmc_samples; ++j){
                        mean_temp,
                        lagged_covars,
                        sigma2_epsilon(j),
-                       w0.col(j),
+                       w0.col(j-1),
                        sigma2_A);
    
-   //mu Update
-   Rcpp::List mu_output = mu_update(y,
-                                    z,
-                                    mu(j-1),
-                                    lagged_covars,
-                                    sigma2_epsilon(j),
-                                    beta0(j),
-                                    beta1(j),
-                                    A11(j),
-                                    A22(j),
-                                    A21(j),
-                                    alpha.col(j-1),
-                                    w0.col(j-1),
-                                    w1.col(j-1),
-                                    keep5,
-                                    sample_size,
-                                    sigma2_mu,
-                                    metrop_var_mu,
-                                    acctot_mu);
+   //Only for the Full, Distributed Lag Model
+   mu(j) = 0.00;
+   alpha.col(j).fill(0.00);
+   tau2(j) = 0.00;
+   if(collapse == 0){
    
-   mu(j) = mu_output[0];
-   acctot_mu = mu_output[1];
-   lagged_covars = mu_output[2];
+     //mu Update
+     Rcpp::List mu_output = mu_update(y,
+                                      z,
+                                      mu(j-1),
+                                      lagged_covars,
+                                      sigma2_epsilon(j),
+                                      beta0(j),
+                                      beta1(j),
+                                      A11(j),
+                                      A22(j),
+                                      A21(j),
+                                      alpha.col(j-1),
+                                      w0.col(j-1),
+                                      w1.col(j-1),
+                                      keep5,
+                                      sample_size,
+                                      sigma2_mu,
+                                      metrop_var_mu,
+                                      acctot_mu);
    
-   //alpha Update
-   Rcpp::List alpha_output = alpha_update(y,
-                                          z,
-                                          neighbors,
-                                          alpha.col(j-1),
-                                          lagged_covars,
-                                          sigma2_epsilon(j),
-                                          beta0(j),
-                                          beta1(j),
-                                          A11(j),
-                                          A22(j),
-                                          A21(j),
-                                          mu(j),
-                                          tau2(j-1),
-                                          w0.col(j-1),
-                                          w1.col(j-1),
-                                          keep5,
-                                          sample_size,
-                                          metrop_var_alpha,
-                                          acctot_alpha);   
+     mu(j) = mu_output[0];
+     acctot_mu = mu_output[1];
+     lagged_covars = mu_output[2];
+     lc1 = Rcpp::as<arma::vec>(lagged_covars[0]);
+     lc2 = Rcpp::as<arma::vec>(lagged_covars[1]);
    
-   alpha.col(j) = as<arma::vec>(alpha_output[0]);
-   acctot_alpha = as<arma::vec>(alpha_output[1]);
-   lagged_covars = alpha_output[2];
+     //alpha Update
+     Rcpp::List alpha_output = alpha_update(y,
+                                            z,
+                                            neighbors,
+                                            alpha.col(j-1),
+                                            lagged_covars,
+                                            sigma2_epsilon(j),
+                                            beta0(j),
+                                            beta1(j),
+                                            A11(j),
+                                            A22(j),
+                                            A21(j),
+                                            mu(j),
+                                            tau2(j-1),
+                                            w0.col(j-1),
+                                            w1.col(j-1),
+                                            keep5,
+                                            sample_size,
+                                            metrop_var_alpha,
+                                            acctot_alpha);   
    
-   //tau2 Update
-   tau2(j) = tau2_update(G,
-                         CAR,
-                         alpha.col(j),
-                         alpha_tau2,
-                         beta_tau2);
+     alpha.col(j) = as<arma::vec>(alpha_output[0]);
+     acctot_alpha = as<arma::vec>(alpha_output[1]);
+     lagged_covars = alpha_output[2];
+     lc1 = Rcpp::as<arma::vec>(lagged_covars[0]);
+     lc2 = Rcpp::as<arma::vec>(lagged_covars[1]);
    
+     //tau2 Update
+     tau2(j) = tau2_update(G,
+                           CAR,
+                           alpha.col(j),
+                           alpha_tau2,
+                           beta_tau2);
+     
+     }
+     
    //w0 Update
    arma::uvec keep3(3); keep3(0) = 0; keep3(1) = 1; keep3(2) = 4;
    mean_temp = construct_mean(beta0(j), 
@@ -494,24 +524,44 @@ for(int j = 1; j < mcmc_samples; ++j){
      Rcpp::checkUserInterrupt();
      }
   
-   if(((j + 1) % int(round(mcmc_samples*0.10)) == 0)){
+   if(((j + 1) % int(round(mcmc_samples*0.05)) == 0)){
+     
      double completion = round(100*((j + 1)/(double)mcmc_samples));
      Rcpp::Rcout << "Progress: " << completion << "%" << std::endl;
+     
      double accrate_A11_trans = round(100*(acctot_A11_trans/(double)j));
      Rcpp::Rcout << "A11 Acceptance: " << accrate_A11_trans << "%" << std::endl;
+     
      double accrate_A22_trans = round(100*(acctot_A22_trans/(double)j));
      Rcpp::Rcout << "A22 Acceptance: " << accrate_A22_trans << "%" << std::endl;
-     double accrate_mu = round(100*(acctot_mu/(double)j));
-     Rcpp::Rcout << "mu Acceptance: " << accrate_mu << "%" << std::endl;
-     double accrate_alpha_min = round(100*(min(acctot_alpha)/(double)j));
-     Rcpp::Rcout << "alpha Acceptance (min): " << accrate_alpha_min << "%" << std::endl;
-     double accrate_alpha_max = round(100*(max(acctot_alpha)/(double)j));
-     Rcpp::Rcout << "alpha Acceptance (max): " << accrate_alpha_max << "%" << std::endl;
+     
+     if(collapse == 0){
+     
+       double accrate_mu = round(100*(acctot_mu/(double)j));
+       Rcpp::Rcout << "mu Acceptance: " << accrate_mu << "%" << std::endl;
+     
+       double accrate_alpha_min = round(100*(min(acctot_alpha)/(double)j));
+       Rcpp::Rcout << "alpha Acceptance (min): " << accrate_alpha_min << "%" << std::endl;
+     
+       double accrate_alpha_max = round(100*(max(acctot_alpha)/(double)j));
+       Rcpp::Rcout << "alpha Acceptance (max): " << accrate_alpha_max << "%" << std::endl;
+     
+       }
+     
      double accrate_phi0_trans = round(100*(acctot_phi0_trans/(double)j));
      Rcpp::Rcout << "phi0 Acceptance: " << accrate_phi0_trans << "%" << std::endl;
+     
      double accrate_phi1_trans = round(100*(acctot_phi1_trans/(double)j));
      Rcpp::Rcout << "phi1 Acceptance: " << accrate_phi1_trans << "%" << std::endl;
-     Rcpp::Rcout << "*******************" << std::endl;
+     
+     if(collapse == 0){
+       Rcpp::Rcout << "***************************" << std::endl;
+       }
+     
+     if(collapse != 0){
+       Rcpp::Rcout << "********************" << std::endl;
+       }
+     
      }
   
    }

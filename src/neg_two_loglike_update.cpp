@@ -11,9 +11,8 @@ double neg_two_loglike_update(arma::vec y,
                               double sigma2_epsilon){
 
 int n = y.size();
-  
 arma::vec dens(n); dens.fill(0.00);
-for(int j = 0; j < n; ++j){
+for(int j = 0; j < n; ++ j){
    dens(j) = R::dnorm(y(j),
                       mean_temp(j),
                       sqrt(sigma2_epsilon),
