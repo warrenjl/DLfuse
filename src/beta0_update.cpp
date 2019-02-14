@@ -18,7 +18,7 @@ double beta0_mean = sigma2_beta*sum(y - mean_temp)/(sum(sample_size)*sigma2_beta
 
 double beta0 = R::rnorm(beta0_mean,
                         sqrt(beta0_var));
-  
+
 return(beta0);
 
 }
