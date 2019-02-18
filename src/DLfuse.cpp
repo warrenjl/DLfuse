@@ -42,14 +42,15 @@ Rcpp::List DLfuse(int mcmc_samples,
                   Rcpp::Nullable<double> phi0_init = R_NilValue,
                   Rcpp::Nullable<Rcpp::NumericVector> w1_init = R_NilValue,
                   Rcpp::Nullable<double> phi1_init = R_NilValue,
-                  Rcpp::Nullable<int> collapse_indicator = R_NilValue){
+                  Rcpp::Nullable<int> model_type_indicator = R_NilValue){
   
-//No Distributed Lags (Original Method)
-//collapse_indicator = 0; Full, Distributed Lag Model
-//collapse_indicator = Any Other Integer (Preferably One); No Distributed Lags, Original Model
-int collapse = 0;
-if(collapse_indicator.isNotNull()){
-  collapse = Rcpp::as<int>(collapse_indicator);
+//model_type_indicator = 0: Full, Distributed Lag Model
+//model_type_indicator = 1: No Distributed Lags, Original Model
+//model_type_indicator = 2: Ordinary Kriging Model
+//model_type_indicator = 3: Simple Linear Regression
+int model_type = 0;
+if(model_type_indicator.isNotNull()){
+  model_type = Rcpp::as<int>(model_type_indicator);
   }
 
 //Defining Parameters and Quantities of Interest
@@ -62,6 +63,7 @@ for(int j = 0; j < m; ++ j){
 arma::mat CAR = Dw - 
                 neighbors;
 int G = 1.00;  //G Always Equal to One in this Case (One Island because of Inverse Distance Weighting)
+double max_dist = spatial_dists.max();
 
 arma::vec sigma2_epsilon(mcmc_samples); sigma2_epsilon.fill(0.00);
 arma::vec beta0(mcmc_samples); beta0.fill(0.00);
@@ -185,7 +187,7 @@ if(w0_init.isNotNull()){
   w0.col(0) = Rcpp::as<arma::vec>(w0_init);
   }
 
-phi0(0) = 1.00;
+phi0(0) = -log(0.05)/max_dist;  //Effective range equal to largest distance in dataset (strong spatial correlation)
 if(phi0_init.isNotNull()){
   phi0(0) = Rcpp::as<double>(phi0_init);
   }
@@ -198,7 +200,7 @@ if(w1_init.isNotNull()){
   w1.col(0) = Rcpp::as<arma::vec>(w1_init);
   }
 
-phi1(0) = 1.00;
+phi1(0) = -log(0.05)/max_dist;  //Effective range equal to largest distance in dataset (strong spatial correlation)
 if(phi1_init.isNotNull()){
   phi1(0) = Rcpp::as<double>(phi1_init);
   }
@@ -211,7 +213,7 @@ Rcpp::List lagged_covars = construct_lagged_covars(z,
                                                    alpha.col(0),
                                                    sample_size);
 
-if(collapse != 0){
+if(model_type == 1 || model_type == 3){
   double negative_infinity = -std::numeric_limits<double>::infinity();
   lagged_covars = construct_lagged_covars(z,
                                           negative_infinity, 
@@ -286,91 +288,104 @@ for(int j = 1; j < mcmc_samples; ++ j){
                            sample_size,
                            sigma2_beta);
    
-   //beta1 Update
-   keep4(0) = 0; keep4(1) = 2; keep4(2) = 3; keep4(3) = 4;
-   mean_temp = construct_mean(beta0(j), 
-                              beta1(j-1),
-                              A11(j-1),
-                              A22(j-1),
-                              A21(j-1),
-                              w0.col(j-1),
-                              w1.col(j-1),
-                              diagmat(lc1),
-                              keep4,
-                              sample_size);
+   beta1(j) = 0.00;
+   if(model_type != 2){
+
+     //beta1 Update
+     keep4(0) = 0; keep4(1) = 2; keep4(2) = 3; keep4(3) = 4;
+     mean_temp = construct_mean(beta0(j), 
+                                beta1(j-1),
+                                A11(j-1),
+                                A22(j-1),
+                                A21(j-1),
+                                w0.col(j-1),
+                                w1.col(j-1),
+                                diagmat(lc1),
+                                keep4,
+                                sample_size);
    
-   beta1(j) = beta1_update(y,
-                           mean_temp,
-                           lagged_covars,
-                           sigma2_epsilon(j),
-                           sample_size,
-                           sigma2_beta);
+     beta1(j) = beta1_update(y,
+                             mean_temp,
+                             lagged_covars,
+                             sigma2_epsilon(j),
+                             sample_size,
+                             sigma2_beta);
+     
+     }
    
-   //A11 Update
-   Rcpp::List A11_output = A11_update(y,
-                                      A11(j-1),
-                                      lagged_covars,
-                                      sigma2_epsilon(j),
-                                      beta0(j),
-                                      beta1(j),
-                                      A22(j-1),
-                                      A21(j-1),
-                                      w0.col(j-1),
-                                      w1.col(j-1),
-                                      keep5,
-                                      sample_size,
-                                      sigma2_A,
-                                      metrop_var_A11_trans,
-                                      acctot_A11_trans);
+   A11(j) = 0.00;  
+   if(model_type != 3){
+  
+     //A11 Update
+     Rcpp::List A11_output = A11_update(y,
+                                        A11(j-1),
+                                        lagged_covars,
+                                        sigma2_epsilon(j),
+                                        beta0(j),
+                                        beta1(j),
+                                        A22(j-1),
+                                        A21(j-1),
+                                        w0.col(j-1),
+                                        w1.col(j-1),
+                                        keep5,
+                                        sample_size,
+                                        sigma2_A,
+                                        metrop_var_A11_trans,
+                                        acctot_A11_trans);
    
-   A11(j) = A11_output[0];
-   acctot_A11_trans = A11_output[1];
+     A11(j) = A11_output[0];
+     acctot_A11_trans = A11_output[1];
+     }
    
-   //A22 Update
-   Rcpp::List A22_output = A22_update(y,
-                                      A22(j-1),
-                                      lagged_covars,
-                                      sigma2_epsilon(j),
-                                      beta0(j),
-                                      beta1(j),
-                                      A11(j),
-                                      A21(j-1),
-                                      w0.col(j-1),
-                                      w1.col(j-1),
-                                      keep5,
-                                      sample_size,
-                                      sigma2_A,
-                                      metrop_var_A22_trans,
-                                      acctot_A22_trans);
+   A22(j) = 0.00;
+   A21(j) = 0.00;
+   if(model_type == 0 || model_type == 1){
+
+     //A22 Update
+     Rcpp::List A22_output = A22_update(y,
+                                        A22(j-1),
+                                        lagged_covars,
+                                        sigma2_epsilon(j),
+                                        beta0(j),
+                                        beta1(j),
+                                        A11(j),
+                                        A21(j-1),
+                                        w0.col(j-1),
+                                        w1.col(j-1),
+                                        keep5,
+                                        sample_size,
+                                        sigma2_A,
+                                        metrop_var_A22_trans,
+                                        acctot_A22_trans);
    
-   A22(j) = A22_output[0];
-   acctot_A22_trans = A22_output[1];
+     A22(j) = A22_output[0];
+     acctot_A22_trans = A22_output[1];
    
-   //A21 Update
-   keep4(0) = 0; keep4(1) = 1; keep4(2) = 2; keep4(3) = 4;
-   mean_temp = construct_mean(beta0(j), 
-                              beta1(j),
-                              A11(j),
-                              A22(j),
-                              A21(j-1),
-                              w0.col(j-1),
-                              w1.col(j-1),
-                              diagmat(lc1),
-                              keep4,
-                              sample_size);
-   
-   A21(j) = A21_update(y,
-                       mean_temp,
-                       lagged_covars,
-                       sigma2_epsilon(j),
-                       w0.col(j-1),
-                       sigma2_A);
-   
-   //Only for the Full, Distributed Lag Model
+     //A21 Update
+     keep4(0) = 0; keep4(1) = 1; keep4(2) = 2; keep4(3) = 4;
+     mean_temp = construct_mean(beta0(j), 
+                                beta1(j),
+                                A11(j),
+                                A22(j),
+                                A21(j-1),
+                                w0.col(j-1),
+                                w1.col(j-1),
+                                diagmat(lc1),
+                                keep4,
+                                sample_size);
+     
+     A21(j) = A21_update(y,
+                         mean_temp,
+                         lagged_covars,
+                         sigma2_epsilon(j),
+                         w0.col(j-1),
+                         sigma2_A);
+     }
+    
    mu(j) = 0.00;
    alpha.col(j).fill(0.00);
    tau2(j) = 0.00;
-   if(collapse == 0){
+   if(model_type == 0){
    
      //mu Update
      Rcpp::List mu_output = mu_update(y,
@@ -434,74 +449,83 @@ for(int j = 1; j < mcmc_samples; ++ j){
      
      }
      
-   //w0 Update
-   arma::uvec keep3(3); keep3(0) = 0; keep3(1) = 1; keep3(2) = 4;
-   mean_temp = construct_mean(beta0(j), 
-                              beta1(j),
-                              A11(j),
-                              A22(j),
-                              A21(j),
-                              w0.col(j-1),
-                              w1.col(j-1),
-                              diagmat(lc1),
-                              keep3,
-                              sample_size);
+   w0.col(j).fill(0.00);
+   if(model_type != 3){
+
+     //w0 Update
+     arma::uvec keep3(3); keep3(0) = 0; keep3(1) = 1; keep3(2) = 4;
+     mean_temp = construct_mean(beta0(j), 
+                                beta1(j),
+                                A11(j),
+                                A22(j),
+                                A21(j),
+                                w0.col(j-1),
+                                w1.col(j-1),
+                                diagmat(lc1),
+                                keep3,
+                                sample_size);
    
-   w0.col(j) = w0_update(y,
-                         mean_temp,
-                         lagged_covars,
-                         sigma2_epsilon(j),
-                         A11(j),
-                         A21(j),
-                         spatial_corr0_info[0]);
+     w0.col(j) = w0_update(y,
+                           mean_temp,
+                           lagged_covars,
+                           sigma2_epsilon(j),
+                           A11(j),
+                           A21(j),
+                           spatial_corr0_info[0]);
+    
+     //phi0 Update
+     Rcpp::List phi0_output = phi_update(phi0(j-1),
+                                         spatial_dists,
+                                         w0.col(j),
+                                         spatial_corr0_info,
+                                         alpha_phi0,
+                                         beta_phi0,
+                                         metrop_var_phi0_trans,
+                                         acctot_phi0_trans);
   
-   //phi0 Update
-   Rcpp::List phi0_output = phi_update(phi0(j-1),
-                                       spatial_dists,
-                                       w0.col(j),
-                                       spatial_corr0_info,
-                                       alpha_phi0,
-                                       beta_phi0,
-                                       metrop_var_phi0_trans,
-                                       acctot_phi0_trans);
-  
-   phi0(j) = phi0_output[0];
-   acctot_phi0_trans = phi0_output[1];
-   spatial_corr0_info = phi0_output[2];
+     phi0(j) = phi0_output[0];
+     acctot_phi0_trans = phi0_output[1];
+     spatial_corr0_info = phi0_output[2];
+     }
    
-   //w1 Update
-   keep4(0) = 0; keep4(1) = 1; keep4(2) = 2; keep4(3) = 3;
-   mean_temp = construct_mean(beta0(j), 
-                              beta1(j),
-                              A11(j),
-                              A22(j),
-                              A21(j),
-                              w0.col(j),
-                              w1.col(j-1),
-                              diagmat(lc1),
-                              keep4,
-                              sample_size);
+   w1.col(j).fill(0.00);
+   phi1(j) = 0.00;
+   if(model_type == 0 || model_type == 1){
+     
+     //w1 Update
+     keep4(0) = 0; keep4(1) = 1; keep4(2) = 2; keep4(3) = 3;
+     mean_temp = construct_mean(beta0(j), 
+                                beta1(j),
+                                A11(j),
+                                A22(j),
+                                A21(j),
+                                w0.col(j),
+                                w1.col(j-1),
+                                diagmat(lc1),
+                                keep4,
+                                sample_size);
    
-   w1.col(j) = w1_update(y,
-                         mean_temp,
-                         lagged_covars,
-                         sigma2_epsilon(j),
-                         A22(j),
-                         spatial_corr1_info[0]);
-   
-   //phi1 Update
-   Rcpp::List phi1_output = phi_update(phi1(j-1),
-                                       spatial_dists,
-                                       w1.col(j),
-                                       spatial_corr1_info,
-                                       alpha_phi1,
-                                       beta_phi1,
-                                       metrop_var_phi1_trans,
-                                       acctot_phi1_trans);
-   
-   phi1(j) = phi1_output[0];
-   acctot_phi1_trans = phi1_output[1];
-   spatial_corr1_info = phi1_output[2];
+     w1.col(j) = w1_update(y,
+                           mean_temp,
+                           lagged_covars,
+                           sigma2_epsilon(j),
+                           A22(j),
+                           spatial_corr1_info[0]);
+     
+     //phi1 Update
+     Rcpp::List phi1_output = phi_update(phi1(j-1),
+                                         spatial_dists,
+                                         w1.col(j),
+                                         spatial_corr1_info,
+                                         alpha_phi1,
+                                         beta_phi1,
+                                         metrop_var_phi1_trans,
+                                         acctot_phi1_trans);
+     
+     phi1(j) = phi1_output[0];
+     acctot_phi1_trans = phi1_output[1];
+     spatial_corr1_info = phi1_output[2];
+     }
    
    //neg_two_loglike Update
    mean_temp = construct_mean(beta0(j), 
@@ -529,13 +553,17 @@ for(int j = 1; j < mcmc_samples; ++ j){
      double completion = round(100*((j + 1)/(double)mcmc_samples));
      Rcpp::Rcout << "Progress: " << completion << "%" << std::endl;
      
-     double accrate_A11_trans = round(100*(acctot_A11_trans/(double)j));
-     Rcpp::Rcout << "A11 Acceptance: " << accrate_A11_trans << "%" << std::endl;
+     if(model_type != 3){
+       double accrate_A11_trans = round(100*(acctot_A11_trans/(double)j));
+       Rcpp::Rcout << "A11 Acceptance: " << accrate_A11_trans << "%" << std::endl;
+       }
      
-     double accrate_A22_trans = round(100*(acctot_A22_trans/(double)j));
-     Rcpp::Rcout << "A22 Acceptance: " << accrate_A22_trans << "%" << std::endl;
+     if(model_type == 0 || model_type == 1){
+       double accrate_A22_trans = round(100*(acctot_A22_trans/(double)j));
+       Rcpp::Rcout << "A22 Acceptance: " << accrate_A22_trans << "%" << std::endl;
+       }
      
-     if(collapse == 0){
+     if(model_type == 0){
      
        double accrate_mu = round(100*(acctot_mu/(double)j));
        Rcpp::Rcout << "mu Acceptance: " << accrate_mu << "%" << std::endl;
@@ -548,18 +576,34 @@ for(int j = 1; j < mcmc_samples; ++ j){
      
        }
      
-     double accrate_phi0_trans = round(100*(acctot_phi0_trans/(double)j));
-     Rcpp::Rcout << "phi0 Acceptance: " << accrate_phi0_trans << "%" << std::endl;
+     if(model_type != 3){
+       double accrate_phi0_trans = round(100*(acctot_phi0_trans/(double)j));
+       Rcpp::Rcout << "phi0 Acceptance: " << accrate_phi0_trans << "%" << std::endl;
+       }
      
-     double accrate_phi1_trans = round(100*(acctot_phi1_trans/(double)j));
-     Rcpp::Rcout << "phi1 Acceptance: " << accrate_phi1_trans << "%" << std::endl;
+     if(model_type == 0 || model_type == 1){
+       double accrate_phi1_trans = round(100*(acctot_phi1_trans/(double)j));
+       Rcpp::Rcout << "phi1 Acceptance: " << accrate_phi1_trans << "%" << std::endl;
+       }
      
-     if(collapse == 0){
+     if(model_type == 0){
+       Rcpp::Rcout << "DLfuse" << std::endl;
        Rcpp::Rcout << "***************************" << std::endl;
        }
      
-     if(collapse != 0){
+     if(model_type == 1){
+       Rcpp::Rcout << "Original" << std::endl;
        Rcpp::Rcout << "********************" << std::endl;
+       }
+     
+     if(model_type == 2){
+       Rcpp::Rcout << "Ordinary Kriging" << std::endl;
+       Rcpp::Rcout << "********************" << std::endl;
+       }
+     
+     if(model_type == 3){
+       Rcpp::Rcout << "Simple Linear Regression" << std::endl;
+       Rcpp::Rcout << "************************" << std::endl;
        }
      
      }

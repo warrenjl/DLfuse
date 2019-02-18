@@ -73,8 +73,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // DLfuse
-Rcpp::List DLfuse(int mcmc_samples, arma::vec y, arma::mat z, arma::vec sample_size, arma::mat spatial_dists, arma::mat neighbors, double metrop_var_A11_trans, double metrop_var_A22_trans, double metrop_var_mu, arma::vec metrop_var_alpha, double metrop_var_phi0_trans, double metrop_var_phi1_trans, Rcpp::Nullable<double> alpha_sigma2_epsilon_prior, Rcpp::Nullable<double> beta_sigma2_epsilon_prior, Rcpp::Nullable<double> sigma2_beta_prior, Rcpp::Nullable<double> sigma2_A_prior, Rcpp::Nullable<double> sigma2_mu_prior, Rcpp::Nullable<double> alpha_tau2_prior, Rcpp::Nullable<double> beta_tau2_prior, Rcpp::Nullable<double> alpha_phi0_prior, Rcpp::Nullable<double> beta_phi0_prior, Rcpp::Nullable<double> alpha_phi1_prior, Rcpp::Nullable<double> beta_phi1_prior, Rcpp::Nullable<double> sigma2_epsilon_init, Rcpp::Nullable<double> beta0_init, Rcpp::Nullable<double> beta1_init, Rcpp::Nullable<double> A11_init, Rcpp::Nullable<double> A22_init, Rcpp::Nullable<double> A21_init, Rcpp::Nullable<double> mu_init, Rcpp::Nullable<Rcpp::NumericVector> alpha_init, Rcpp::Nullable<double> tau2_init, Rcpp::Nullable<Rcpp::NumericVector> w0_init, Rcpp::Nullable<double> phi0_init, Rcpp::Nullable<Rcpp::NumericVector> w1_init, Rcpp::Nullable<double> phi1_init, Rcpp::Nullable<int> collapse_indicator);
-RcppExport SEXP _DLfuse_DLfuse(SEXP mcmc_samplesSEXP, SEXP ySEXP, SEXP zSEXP, SEXP sample_sizeSEXP, SEXP spatial_distsSEXP, SEXP neighborsSEXP, SEXP metrop_var_A11_transSEXP, SEXP metrop_var_A22_transSEXP, SEXP metrop_var_muSEXP, SEXP metrop_var_alphaSEXP, SEXP metrop_var_phi0_transSEXP, SEXP metrop_var_phi1_transSEXP, SEXP alpha_sigma2_epsilon_priorSEXP, SEXP beta_sigma2_epsilon_priorSEXP, SEXP sigma2_beta_priorSEXP, SEXP sigma2_A_priorSEXP, SEXP sigma2_mu_priorSEXP, SEXP alpha_tau2_priorSEXP, SEXP beta_tau2_priorSEXP, SEXP alpha_phi0_priorSEXP, SEXP beta_phi0_priorSEXP, SEXP alpha_phi1_priorSEXP, SEXP beta_phi1_priorSEXP, SEXP sigma2_epsilon_initSEXP, SEXP beta0_initSEXP, SEXP beta1_initSEXP, SEXP A11_initSEXP, SEXP A22_initSEXP, SEXP A21_initSEXP, SEXP mu_initSEXP, SEXP alpha_initSEXP, SEXP tau2_initSEXP, SEXP w0_initSEXP, SEXP phi0_initSEXP, SEXP w1_initSEXP, SEXP phi1_initSEXP, SEXP collapse_indicatorSEXP) {
+Rcpp::List DLfuse(int mcmc_samples, arma::vec y, arma::mat z, arma::vec sample_size, arma::mat spatial_dists, arma::mat neighbors, double metrop_var_A11_trans, double metrop_var_A22_trans, double metrop_var_mu, arma::vec metrop_var_alpha, double metrop_var_phi0_trans, double metrop_var_phi1_trans, Rcpp::Nullable<double> alpha_sigma2_epsilon_prior, Rcpp::Nullable<double> beta_sigma2_epsilon_prior, Rcpp::Nullable<double> sigma2_beta_prior, Rcpp::Nullable<double> sigma2_A_prior, Rcpp::Nullable<double> sigma2_mu_prior, Rcpp::Nullable<double> alpha_tau2_prior, Rcpp::Nullable<double> beta_tau2_prior, Rcpp::Nullable<double> alpha_phi0_prior, Rcpp::Nullable<double> beta_phi0_prior, Rcpp::Nullable<double> alpha_phi1_prior, Rcpp::Nullable<double> beta_phi1_prior, Rcpp::Nullable<double> sigma2_epsilon_init, Rcpp::Nullable<double> beta0_init, Rcpp::Nullable<double> beta1_init, Rcpp::Nullable<double> A11_init, Rcpp::Nullable<double> A22_init, Rcpp::Nullable<double> A21_init, Rcpp::Nullable<double> mu_init, Rcpp::Nullable<Rcpp::NumericVector> alpha_init, Rcpp::Nullable<double> tau2_init, Rcpp::Nullable<Rcpp::NumericVector> w0_init, Rcpp::Nullable<double> phi0_init, Rcpp::Nullable<Rcpp::NumericVector> w1_init, Rcpp::Nullable<double> phi1_init, Rcpp::Nullable<int> model_type_indicator);
+RcppExport SEXP _DLfuse_DLfuse(SEXP mcmc_samplesSEXP, SEXP ySEXP, SEXP zSEXP, SEXP sample_sizeSEXP, SEXP spatial_distsSEXP, SEXP neighborsSEXP, SEXP metrop_var_A11_transSEXP, SEXP metrop_var_A22_transSEXP, SEXP metrop_var_muSEXP, SEXP metrop_var_alphaSEXP, SEXP metrop_var_phi0_transSEXP, SEXP metrop_var_phi1_transSEXP, SEXP alpha_sigma2_epsilon_priorSEXP, SEXP beta_sigma2_epsilon_priorSEXP, SEXP sigma2_beta_priorSEXP, SEXP sigma2_A_priorSEXP, SEXP sigma2_mu_priorSEXP, SEXP alpha_tau2_priorSEXP, SEXP beta_tau2_priorSEXP, SEXP alpha_phi0_priorSEXP, SEXP beta_phi0_priorSEXP, SEXP alpha_phi1_priorSEXP, SEXP beta_phi1_priorSEXP, SEXP sigma2_epsilon_initSEXP, SEXP beta0_initSEXP, SEXP beta1_initSEXP, SEXP A11_initSEXP, SEXP A22_initSEXP, SEXP A21_initSEXP, SEXP mu_initSEXP, SEXP alpha_initSEXP, SEXP tau2_initSEXP, SEXP w0_initSEXP, SEXP phi0_initSEXP, SEXP w1_initSEXP, SEXP phi1_initSEXP, SEXP model_type_indicatorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -114,8 +114,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Rcpp::Nullable<double> >::type phi0_init(phi0_initSEXP);
     Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::NumericVector> >::type w1_init(w1_initSEXP);
     Rcpp::traits::input_parameter< Rcpp::Nullable<double> >::type phi1_init(phi1_initSEXP);
-    Rcpp::traits::input_parameter< Rcpp::Nullable<int> >::type collapse_indicator(collapse_indicatorSEXP);
-    rcpp_result_gen = Rcpp::wrap(DLfuse(mcmc_samples, y, z, sample_size, spatial_dists, neighbors, metrop_var_A11_trans, metrop_var_A22_trans, metrop_var_mu, metrop_var_alpha, metrop_var_phi0_trans, metrop_var_phi1_trans, alpha_sigma2_epsilon_prior, beta_sigma2_epsilon_prior, sigma2_beta_prior, sigma2_A_prior, sigma2_mu_prior, alpha_tau2_prior, beta_tau2_prior, alpha_phi0_prior, beta_phi0_prior, alpha_phi1_prior, beta_phi1_prior, sigma2_epsilon_init, beta0_init, beta1_init, A11_init, A22_init, A21_init, mu_init, alpha_init, tau2_init, w0_init, phi0_init, w1_init, phi1_init, collapse_indicator));
+    Rcpp::traits::input_parameter< Rcpp::Nullable<int> >::type model_type_indicator(model_type_indicatorSEXP);
+    rcpp_result_gen = Rcpp::wrap(DLfuse(mcmc_samples, y, z, sample_size, spatial_dists, neighbors, metrop_var_A11_trans, metrop_var_A22_trans, metrop_var_mu, metrop_var_alpha, metrop_var_phi0_trans, metrop_var_phi1_trans, alpha_sigma2_epsilon_prior, beta_sigma2_epsilon_prior, sigma2_beta_prior, sigma2_A_prior, sigma2_mu_prior, alpha_tau2_prior, beta_tau2_prior, alpha_phi0_prior, beta_phi0_prior, alpha_phi1_prior, beta_phi1_prior, sigma2_epsilon_init, beta0_init, beta1_init, A11_init, A22_init, A21_init, mu_init, alpha_init, tau2_init, w0_init, phi0_init, w1_init, phi1_init, model_type_indicator));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -272,6 +272,25 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// ppd
+arma::mat ppd(Rcpp::List modeling_output, int n_pred, int m_pred, arma::mat z_pred, arma::vec sample_size_pred, arma::mat spatial_dists_full, arma::mat neighbors_full, arma::vec inference_set, Rcpp::Nullable<int> model_type_indicator);
+RcppExport SEXP _DLfuse_ppd(SEXP modeling_outputSEXP, SEXP n_predSEXP, SEXP m_predSEXP, SEXP z_predSEXP, SEXP sample_size_predSEXP, SEXP spatial_dists_fullSEXP, SEXP neighbors_fullSEXP, SEXP inference_setSEXP, SEXP model_type_indicatorSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type modeling_output(modeling_outputSEXP);
+    Rcpp::traits::input_parameter< int >::type n_pred(n_predSEXP);
+    Rcpp::traits::input_parameter< int >::type m_pred(m_predSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type z_pred(z_predSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type sample_size_pred(sample_size_predSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type spatial_dists_full(spatial_dists_fullSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type neighbors_full(neighbors_fullSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type inference_set(inference_setSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<int> >::type model_type_indicator(model_type_indicatorSEXP);
+    rcpp_result_gen = Rcpp::wrap(ppd(modeling_output, n_pred, m_pred, z_pred, sample_size_pred, spatial_dists_full, neighbors_full, inference_set, model_type_indicator));
+    return rcpp_result_gen;
+END_RCPP
+}
 // sigma2_epsilon_update
 double sigma2_epsilon_update(arma::vec y, arma::vec mean_temp, arma::vec sample_size, double alpha_sigma2_epsilon, double beta_sigma2_epsilon);
 RcppExport SEXP _DLfuse_sigma2_epsilon_update(SEXP ySEXP, SEXP mean_tempSEXP, SEXP sample_sizeSEXP, SEXP alpha_sigma2_epsilonSEXP, SEXP beta_sigma2_epsilonSEXP) {
@@ -361,6 +380,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_DLfuse_mu_update", (DL_FUNC) &_DLfuse_mu_update, 18},
     {"_DLfuse_neg_two_loglike_update", (DL_FUNC) &_DLfuse_neg_two_loglike_update, 3},
     {"_DLfuse_phi_update", (DL_FUNC) &_DLfuse_phi_update, 8},
+    {"_DLfuse_ppd", (DL_FUNC) &_DLfuse_ppd, 9},
     {"_DLfuse_sigma2_epsilon_update", (DL_FUNC) &_DLfuse_sigma2_epsilon_update, 5},
     {"_DLfuse_spatial_corr_fun", (DL_FUNC) &_DLfuse_spatial_corr_fun, 2},
     {"_DLfuse_tau2_update", (DL_FUNC) &_DLfuse_tau2_update, 5},
