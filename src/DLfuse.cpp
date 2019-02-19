@@ -81,12 +81,12 @@ arma::vec phi1(mcmc_samples); phi1.fill(0.00);
 arma::vec neg_two_loglike(mcmc_samples); neg_two_loglike.fill(0.00);
 
 //Prior Information
-double alpha_sigma2_epsilon = 3.00;
+double alpha_sigma2_epsilon = 0.01;
 if(alpha_sigma2_epsilon_prior.isNotNull()){
   alpha_sigma2_epsilon = Rcpp::as<double>(alpha_sigma2_epsilon_prior);
   }
 
-double beta_sigma2_epsilon = 2.00;
+double beta_sigma2_epsilon = 0.01;
 if(beta_sigma2_epsilon_prior.isNotNull()){
   beta_sigma2_epsilon = Rcpp::as<double>(beta_sigma2_epsilon_prior);
   }
