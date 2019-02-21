@@ -145,7 +145,7 @@ for(int i = 0; i < inference_samples;  ++ i){
                 
    for(int j = 0; j < n_pred; ++ j){
       y_pred(i,j) = R::rnorm(mean_temp(j),
-                           sqrt(sigma2_epsilon(inference_set(i) - 1)));
+                             sqrt(sigma2_epsilon(inference_set(i) - 1)));
       } 
    
    
