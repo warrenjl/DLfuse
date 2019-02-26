@@ -49,8 +49,8 @@ phi_update <- function(phi_old, spatial_dists, w, spatial_corr_info, alpha_phi, 
     .Call(`_DLfuse_phi_update`, phi_old, spatial_dists, w, spatial_corr_info, alpha_phi, beta_phi, metrop_var_phi_trans, acctot_phi_trans)
 }
 
-ppd <- function(modeling_output, n_pred, m_pred, z_pred, sample_size_pred, spatial_dists_full, neighbors_full, inference_set, model_type_indicator = NULL) {
-    .Call(`_DLfuse_ppd`, modeling_output, n_pred, m_pred, z_pred, sample_size_pred, spatial_dists_full, neighbors_full, inference_set, model_type_indicator)
+ppd <- function(modeling_output, n_pred, m_pred, z_pred, sample_size_pred, spatial_dists_full, neighbors_full, inference_set, params_only_indicator = NULL, model_type_indicator = NULL) {
+    .Call(`_DLfuse_ppd`, modeling_output, n_pred, m_pred, z_pred, sample_size_pred, spatial_dists_full, neighbors_full, inference_set, params_only_indicator, model_type_indicator)
 }
 
 sigma2_epsilon_update <- function(y, mean_temp, sample_size, alpha_sigma2_epsilon, beta_sigma2_epsilon) {

@@ -189,14 +189,15 @@ Rcpp::List DLfuse(int mcmc_samples,
                   Rcpp::Nullable<double> phi1_init,
                   Rcpp::Nullable<int> model_type_indicator); 
 
-arma::mat ppd(Rcpp::List modeling_output,
-              int n_pred,
-              int m_pred,
-              arma::mat z_pred,
-              arma::vec sample_size_pred,
-              arma::mat spatial_dists_full,
-              arma::mat neighbors_full,
-              arma::vec inference_set,
-              Rcpp::Nullable<int> model_type_indicator);
+Rcpp::List ppd(Rcpp::List modeling_output,
+               int n_pred,
+               int m_pred,
+               arma::mat z_pred,
+               arma::vec sample_size_pred,
+               arma::mat spatial_dists_full,
+               arma::mat neighbors_full,
+               arma::vec inference_set,
+               Rcpp::Nullable<int> params_only_indicator,
+               Rcpp::Nullable<int> model_type_indicator);
 
 #endif // __DLfuse__

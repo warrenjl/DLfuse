@@ -6,15 +6,23 @@ using namespace Rcpp;
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 
-arma::mat ppd(Rcpp::List modeling_output,
-              int n_pred,
-              int m_pred,
-              arma::mat z_pred,
-              arma::vec sample_size_pred,
-              arma::mat spatial_dists_full,
-              arma::mat neighbors_full,
-              arma::vec inference_set,
-              Rcpp::Nullable<int> model_type_indicator = R_NilValue){
+Rcpp::List ppd(Rcpp::List modeling_output,
+               int n_pred,
+               int m_pred,
+               arma::mat z_pred,
+               arma::vec sample_size_pred,
+               arma::mat spatial_dists_full,
+               arma::mat neighbors_full,
+               arma::vec inference_set,
+               Rcpp::Nullable<int> params_only_indicator = R_NilValue,
+               Rcpp::Nullable<int> model_type_indicator = R_NilValue){
+  
+//params_only_indicator = 0: Predictions of the Outcome and Parameters are Provided
+//params_only_indicator = 1: Only Predictions of the Parameters are Provided
+int params_only = 0;
+if(params_only_indicator.isNotNull()){
+   params_only = Rcpp::as<int>(params_only_indicator);
+   }
   
 //model_type_indicator = 0: Full, Distributed Lag Model
 //model_type_indicator = 1: No Distributed Lags, Original Model
@@ -40,7 +48,11 @@ arma::mat w1 = modeling_output[11];
 arma::vec phi1 = modeling_output[12];
 
 int inference_samples = inference_set.size();
-arma::mat y_pred(inference_samples, n_pred); y_pred.fill(0.00);
+arma::mat y_pred(n_pred, inference_samples); y_pred.fill(0.00);
+arma::mat intercepts_pred(n_pred, inference_samples); intercepts_pred.fill(0.00);
+arma::mat slopes_pred(n_pred, inference_samples); slopes_pred.fill(0.00);
+arma::mat lags_pred(m_pred, inference_samples); lags_pred.fill(0.00);
+
 arma::uvec keep5(5); keep5(0) = 0; keep5(1) = 1; keep5(2) = 2; keep5(3) = 3; keep5(4) = 4;
 arma::mat neighbors_full_12 = neighbors_full.submat(0, m_pred, (m_pred - 1), (neighbors_full.n_cols - 1)); 
 int n_model = w0.n_rows;
@@ -70,6 +82,10 @@ for(int i = 0; i < inference_samples;  ++ i){
         w0_pred(j) = R::rnorm(w0_pred_mean(j),
                               sqrt(w0_pred_cov(j,j)));
         }
+     
+     intercepts_pred.col(i) = beta0(inference_set(i) - 1) + 
+                              A11(inference_set(i) - 1)*w0_pred;
+     
      }
    
    arma::vec w1_pred(n_pred); w1_pred.fill(0.00);
@@ -93,6 +109,10 @@ for(int i = 0; i < inference_samples;  ++ i){
         w1_pred(j) = R::rnorm(w1_pred_mean(j),
                               sqrt(w1_pred_cov(j,j)));
         }
+     
+     slopes_pred.col(i) = beta1(inference_set(i) - 1) + 
+                          A21(inference_set(i) - 1)*w0_pred +
+                          A22(inference_set(i) - 1)*w1_pred;
      
      }
       
@@ -122,32 +142,36 @@ for(int i = 0; i < inference_samples;  ++ i){
         }
      
      mu_pred = mu(inference_set(i) - 1);
+     lags_pred.col(i) = mu_pred +
+                        alpha_pred;
      
      }
 
-   Rcpp::List lagged_covars = construct_lagged_covars(z_pred,
-                                                      mu_pred,
-                                                      alpha_pred,
-                                                      sample_size_pred);
-   arma::vec lc1 = lagged_covars[0];
+   if(params_only == 0){
+     Rcpp::List lagged_covars = construct_lagged_covars(z_pred,
+                                                        mu_pred,
+                                                        alpha_pred,
+                                                        sample_size_pred);
+     arma::vec lc1 = lagged_covars[0];
       
-   //Predictions
-   arma::vec mean_temp = construct_mean(beta0(inference_set(i) - 1), 
-                                        beta1(inference_set(i) - 1),
-                                        A11(inference_set(i) - 1),
-                                        A22(inference_set(i) - 1),
-                                        A21(inference_set(i) - 1),
-                                        w0_pred,
-                                        w1_pred,
-                                        diagmat(lc1),
-                                        keep5,
-                                        sample_size_pred);
+     //Predictions
+     arma::vec mean_temp = construct_mean(beta0(inference_set(i) - 1), 
+                                          beta1(inference_set(i) - 1),
+                                          A11(inference_set(i) - 1),
+                                          A22(inference_set(i) - 1),
+                                          A21(inference_set(i) - 1),
+                                          w0_pred,
+                                          w1_pred,
+                                          diagmat(lc1),
+                                          keep5,
+                                          sample_size_pred);
                 
-   for(int j = 0; j < n_pred; ++ j){
-      y_pred(i,j) = R::rnorm(mean_temp(j),
-                             sqrt(sigma2_epsilon(inference_set(i) - 1)));
-      } 
-   
+     for(int j = 0; j < n_pred; ++ j){
+        y_pred(j,i) = R::rnorm(mean_temp(j),
+                               sqrt(sigma2_epsilon(inference_set(i) - 1)));
+        }   
+     
+     }
    
    if(((i + 1) % int(round(inference_samples*0.05)) == 0)){
      double completion = round(100*((i + 1)/(double)inference_samples));
@@ -157,6 +181,9 @@ for(int i = 0; i < inference_samples;  ++ i){
     
    }
     
-return(y_pred);
+return Rcpp::List::create(Rcpp::Named("y_pred") = y_pred,
+                          Rcpp::Named("intercepts_pred") = intercepts_pred,
+                          Rcpp::Named("slopes_pred") = slopes_pred,
+                          Rcpp::Named("lags_pred") = lags_pred);
 
 }

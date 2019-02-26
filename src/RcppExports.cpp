@@ -273,8 +273,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // ppd
-arma::mat ppd(Rcpp::List modeling_output, int n_pred, int m_pred, arma::mat z_pred, arma::vec sample_size_pred, arma::mat spatial_dists_full, arma::mat neighbors_full, arma::vec inference_set, Rcpp::Nullable<int> model_type_indicator);
-RcppExport SEXP _DLfuse_ppd(SEXP modeling_outputSEXP, SEXP n_predSEXP, SEXP m_predSEXP, SEXP z_predSEXP, SEXP sample_size_predSEXP, SEXP spatial_dists_fullSEXP, SEXP neighbors_fullSEXP, SEXP inference_setSEXP, SEXP model_type_indicatorSEXP) {
+Rcpp::List ppd(Rcpp::List modeling_output, int n_pred, int m_pred, arma::mat z_pred, arma::vec sample_size_pred, arma::mat spatial_dists_full, arma::mat neighbors_full, arma::vec inference_set, Rcpp::Nullable<int> params_only_indicator, Rcpp::Nullable<int> model_type_indicator);
+RcppExport SEXP _DLfuse_ppd(SEXP modeling_outputSEXP, SEXP n_predSEXP, SEXP m_predSEXP, SEXP z_predSEXP, SEXP sample_size_predSEXP, SEXP spatial_dists_fullSEXP, SEXP neighbors_fullSEXP, SEXP inference_setSEXP, SEXP params_only_indicatorSEXP, SEXP model_type_indicatorSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -286,8 +286,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::mat >::type spatial_dists_full(spatial_dists_fullSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type neighbors_full(neighbors_fullSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type inference_set(inference_setSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<int> >::type params_only_indicator(params_only_indicatorSEXP);
     Rcpp::traits::input_parameter< Rcpp::Nullable<int> >::type model_type_indicator(model_type_indicatorSEXP);
-    rcpp_result_gen = Rcpp::wrap(ppd(modeling_output, n_pred, m_pred, z_pred, sample_size_pred, spatial_dists_full, neighbors_full, inference_set, model_type_indicator));
+    rcpp_result_gen = Rcpp::wrap(ppd(modeling_output, n_pred, m_pred, z_pred, sample_size_pred, spatial_dists_full, neighbors_full, inference_set, params_only_indicator, model_type_indicator));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -380,7 +381,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_DLfuse_mu_update", (DL_FUNC) &_DLfuse_mu_update, 18},
     {"_DLfuse_neg_two_loglike_update", (DL_FUNC) &_DLfuse_neg_two_loglike_update, 3},
     {"_DLfuse_phi_update", (DL_FUNC) &_DLfuse_phi_update, 8},
-    {"_DLfuse_ppd", (DL_FUNC) &_DLfuse_ppd, 9},
+    {"_DLfuse_ppd", (DL_FUNC) &_DLfuse_ppd, 10},
     {"_DLfuse_sigma2_epsilon_update", (DL_FUNC) &_DLfuse_sigma2_epsilon_update, 5},
     {"_DLfuse_spatial_corr_fun", (DL_FUNC) &_DLfuse_spatial_corr_fun, 2},
     {"_DLfuse_tau2_update", (DL_FUNC) &_DLfuse_tau2_update, 5},
