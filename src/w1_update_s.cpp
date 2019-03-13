@@ -6,12 +6,12 @@ using namespace Rcpp;
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 
-arma::vec w1_update(arma::vec y,
-                    arma::vec mean_temp,
-                    Rcpp::List lagged_covars,
-                    double sigma2_epsilon,
-                    double A22,
-                    arma::mat Sigma1_inv){
+arma::vec w1_update_s(arma::vec y,
+                      arma::vec mean_temp,
+                      Rcpp::List lagged_covars,
+                      double sigma2_epsilon,
+                      double A22,
+                      arma::mat Sigma1_inv){
   
 int n = y.size();
   

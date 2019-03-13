@@ -6,16 +6,16 @@ using namespace Rcpp;
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 
-arma::vec construct_mean(double beta0, 
-                         double beta1,
-                         double A11,
-                         double A22,
-                         double A21,
-                         arma::vec w0,
-                         arma::vec w1,
-                         arma::mat Omega,
-                         arma::uvec keep,
-                         arma::vec sample_size){
+arma::vec construct_mean_s(double beta0, 
+                           double beta1,
+                           double A11,
+                           double A22,
+                           double A21,
+                           arma::vec w0,
+                           arma::vec w1,
+                           arma::mat Omega,
+                           arma::uvec keep,
+                           arma::vec sample_size){
   
 int n = sum(sample_size);
 arma::mat mean_mat(n, 5.00); mean_mat.fill(0.00);

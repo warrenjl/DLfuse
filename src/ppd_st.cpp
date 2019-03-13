@@ -6,16 +6,16 @@ using namespace Rcpp;
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 
-Rcpp::List ppd(Rcpp::List modeling_output,
-               int n_pred,
-               int m_pred,
-               arma::mat z_pred,
-               arma::vec sample_size_pred,
-               arma::mat spatial_dists_full,
-               arma::mat neighbors_full,
-               arma::vec inference_set,
-               Rcpp::Nullable<int> params_only_indicator = R_NilValue,
-               Rcpp::Nullable<int> model_type_indicator = R_NilValue){
+Rcpp::List ppd_st(Rcpp::List modeling_output,
+                  int n_pred,
+                  int m_pred,
+                  arma::mat z_pred,
+                  arma::vec sample_size_pred,
+                  arma::mat spatial_dists_full,
+                  arma::mat neighbors_full,
+                  arma::vec inference_set,
+                  Rcpp::Nullable<int> params_only_indicator = R_NilValue,
+                  Rcpp::Nullable<int> model_type_indicator = R_NilValue){
   
 //params_only_indicator = 0: Predictions of the Outcome and Parameters are Provided
 //params_only_indicator = 1: Only Predictions of the Parameters are Provided
@@ -39,13 +39,14 @@ arma::vec beta1 = modeling_output[2];
 arma::vec A11 = modeling_output[3];
 arma::vec A22 = modeling_output[4];
 arma::vec A21 = modeling_output[5];
-arma::vec mu = modeling_output[6];
-arma::mat alpha = modeling_output[7];
-arma::vec tau2 = modeling_output[8];
-arma::mat w0 = modeling_output[9];
-arma::vec phi0 = modeling_output[10];
-arma::mat w1 = modeling_output[11];
-arma::vec phi1 = modeling_output[12];
+arma::mat w0 = modeling_output[6];
+arma::vec phi0 = modeling_output[7];
+arma::mat w1 = modeling_output[8];
+arma::vec phi1 = modeling_output[9];
+Rcpp::List lag_info = modeling_output[10];
+arma::vec mu = lag_info[0];
+arma::mat alpha = lag_info[1];
+arma::vec tau2 = lag_info[2];
 
 int inference_samples = inference_set.size();
 arma::mat y_pred(n_pred, inference_samples); y_pred.fill(0.00);
@@ -148,29 +149,34 @@ for(int i = 0; i < inference_samples;  ++ i){
      }
 
    if(params_only == 0){
-     Rcpp::List lagged_covars = construct_lagged_covars(z_pred,
-                                                        mu_pred,
-                                                        alpha_pred,
-                                                        sample_size_pred);
+     Rcpp::List lagged_covars = construct_lagged_covars_s(z_pred,
+                                                          mu_pred,
+                                                          alpha_pred,
+                                                          sample_size_pred);
      arma::vec lc1 = lagged_covars[0];
       
      //Predictions
-     arma::vec mean_temp = construct_mean(beta0(inference_set(i) - 1), 
-                                          beta1(inference_set(i) - 1),
-                                          A11(inference_set(i) - 1),
-                                          A22(inference_set(i) - 1),
-                                          A21(inference_set(i) - 1),
-                                          w0_pred,
-                                          w1_pred,
-                                          diagmat(lc1),
-                                          keep5,
-                                          sample_size_pred);
+     arma::vec mean_temp = construct_mean_s(beta0(inference_set(i) - 1), 
+                                            beta1(inference_set(i) - 1),
+                                            A11(inference_set(i) - 1),
+                                            A22(inference_set(i) - 1),
+                                            A21(inference_set(i) - 1),
+                                            w0_pred,
+                                            w1_pred,
+                                            diagmat(lc1),
+                                            keep5,
+                                            sample_size_pred);
                 
      for(int j = 0; j < n_pred; ++ j){
         y_pred(j,i) = R::rnorm(mean_temp(j),
                                sqrt(sigma2_epsilon(inference_set(i) - 1)));
         }   
      
+     }
+   
+   //Progress
+   if((i + 1) % 10 == 0){ 
+     Rcpp::checkUserInterrupt();
      }
    
    if(((i + 1) % int(round(inference_samples*0.05)) == 0)){

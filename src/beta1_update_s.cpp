@@ -6,12 +6,12 @@ using namespace Rcpp;
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 
-double beta1_update(arma::vec y,
-                    arma::vec mean_temp,
-                    Rcpp::List lagged_covars,
-                    double sigma2_epsilon,
-                    arma::vec sample_size,
-                    double sigma2_beta){
+double beta1_update_s(arma::vec y,
+                      arma::vec mean_temp,
+                      Rcpp::List lagged_covars,
+                      double sigma2_epsilon,
+                      arma::vec sample_size,
+                      double sigma2_beta){
 
 arma::vec lc1 = lagged_covars[0];
 arma::vec lc2 = lagged_covars[1];
