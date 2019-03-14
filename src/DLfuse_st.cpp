@@ -349,7 +349,7 @@ for(int j = 0; j < d; ++ j){
   
    Rcpp::List lagged_covars_t = construct_lagged_covars_st(z[j],
                                                            mu(0), 
-                                                           mut(j, 0),
+                                                           mut(j,0),
                                                            alpha.col(0),
                                                            sample_size[j],
                                                            CMAQ_key[j]);
@@ -369,7 +369,7 @@ if(model_type == 1 || model_type == 3){
 
      Rcpp::List lagged_covars_t = construct_lagged_covars_st(z[j],
                                                              negative_infinity, 
-                                                             mut(j, 0),
+                                                             mut(j,0),
                                                              alpha.col(0),
                                                              sample_size[j],
                                                              CMAQ_key[j]);
@@ -574,7 +574,18 @@ for(int j = 1; j < mcmc_samples; ++ j){
       betat_temp.col(k) = betat_t;
       
       }
-   betat[j] = betat_temp;  
+   
+   //Centering for Stability
+   betat_temp.row(0) = betat_temp.row(0) -
+                       mean(betat_temp.row(0));
+   betat_temp.row(1) = betat_temp.row(1) -
+                       mean(betat_temp.row(1));
+   
+   if(model_type == 2){
+     betat_temp.row(1).fill(0.00);
+     }
+   
+   betat[j] = betat_temp;
    
    //V Update
    V[j] = V_update_st(betat[j],
@@ -596,18 +607,23 @@ for(int j = 1; j < mcmc_samples; ++ j){
    rho1(j) = Rcpp::as<double>(rho1_output[0]);
    acctot_rho1_trans = rho1_output[1];
    
-   //rho2 Update
-   Rcpp::List rho2_output = rho2_update_st(rho2(j-1),
-                                           betat[j],
-                                           V[j],
-                                           rho1[j],
-                                           a_rho2,
-                                           b_rho2,
-                                           metrop_var_rho2_trans,
-                                           acctot_rho2_trans);
+   rho2(j) = 0.00;
+   if(model_type != 2){
+     
+     //rho2 Update
+     Rcpp::List rho2_output = rho2_update_st(rho2(j-1),
+                                             betat[j],
+                                             V[j],
+                                             rho1[j],
+                                             a_rho2,
+                                             b_rho2,
+                                             metrop_var_rho2_trans,
+                                             acctot_rho2_trans);
    
-   rho2(j) = Rcpp::as<double>(rho2_output[0]);
-   acctot_rho2_trans = rho2_output[1];
+     rho2(j) = Rcpp::as<double>(rho2_output[0]);
+     acctot_rho2_trans = rho2_output[1];
+     
+     }
    
    A11(j) = 0.00;  
    if(model_type != 3){
@@ -807,6 +823,26 @@ for(int j = 1; j < mcmc_samples; ++ j){
         Rcpp::List lagged_covars_t = lagged_covars[k];
         lc1[k] = Rcpp::as<arma::vec>(lagged_covars_t[0]);
         lc2[k] = Rcpp::as<arma::vec>(lagged_covars_t[1]);
+        
+        }
+     
+     //Centering for Stability
+     mut.col(j) = mut.col(j) -
+                  mean(mut.col(j));
+     for(int k = 0; k < d; ++ k){
+      
+        Rcpp::List lagged_covars_t = construct_lagged_covars_st(z[k],
+                                                                mu(j), 
+                                                                mut(k,j),
+                                                                alpha.col(j-1),
+                                                                sample_size[k],
+                                                                CMAQ_key[k]);
+        lagged_covars[k] = lagged_covars_t;
+       
+        arma::vec lc1_t = lagged_covars_t[0];
+        arma::vec lc2_t = lagged_covars_t[1];
+        lc1[k] = lc1_t;
+        lc2[k] = lc2_t;
         
         }
        
@@ -1012,9 +1048,11 @@ for(int j = 1; j < mcmc_samples; ++ j){
      double accrate_rho1_trans = round(100*(acctot_rho1_trans/(double)j));
      Rcpp::Rcout << "rho1 Acceptance: " << accrate_rho1_trans << "%" << std::endl;
        
-     double accrate_rho2_trans = round(100*(acctot_rho2_trans/(double)j));
-     Rcpp::Rcout << "rho2 Acceptance: " << accrate_rho2_trans << "%" << std::endl;
-       
+     if(model_type != 2){
+       double accrate_rho2_trans = round(100*(acctot_rho2_trans/(double)j));
+       Rcpp::Rcout << "rho2 Acceptance: " << accrate_rho2_trans << "%" << std::endl;
+       }
+     
      if(model_type != 3){
        double accrate_A11_trans = round(100*(acctot_A11_trans/(double)j));
        Rcpp::Rcout << "A11 Acceptance: " << accrate_A11_trans << "%" << std::endl;

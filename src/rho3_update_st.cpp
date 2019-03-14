@@ -45,11 +45,11 @@ for(int j = 1; j < d; ++ j){
   
    double mean_temp_t = rho3*mut(j - 1);
   
-   second = second + 
-   R::dnorm(mut(j),
-            mean_temp_t,
-            sqrt(sigma2_delta),
-            1);
+   first = first + 
+           R::dnorm(mut(j),
+                    mean_temp_t,
+                    sqrt(sigma2_delta),
+                    1);
   
    }
 first = first + 

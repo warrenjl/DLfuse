@@ -648,6 +648,26 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// ppd_st
+Rcpp::List ppd_st(Rcpp::List modeling_output, int n_pred, int m_pred, arma::mat z_pred, arma::vec sample_size_pred, arma::mat spatial_dists_full, arma::mat neighbors_full, arma::vec inference_set, Rcpp::Nullable<int> params_only_indicator, Rcpp::Nullable<int> model_type_indicator);
+RcppExport SEXP _DLfuse_ppd_st(SEXP modeling_outputSEXP, SEXP n_predSEXP, SEXP m_predSEXP, SEXP z_predSEXP, SEXP sample_size_predSEXP, SEXP spatial_dists_fullSEXP, SEXP neighbors_fullSEXP, SEXP inference_setSEXP, SEXP params_only_indicatorSEXP, SEXP model_type_indicatorSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type modeling_output(modeling_outputSEXP);
+    Rcpp::traits::input_parameter< int >::type n_pred(n_predSEXP);
+    Rcpp::traits::input_parameter< int >::type m_pred(m_predSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type z_pred(z_predSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type sample_size_pred(sample_size_predSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type spatial_dists_full(spatial_dists_fullSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type neighbors_full(neighbors_fullSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type inference_set(inference_setSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<int> >::type params_only_indicator(params_only_indicatorSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<int> >::type model_type_indicator(model_type_indicatorSEXP);
+    rcpp_result_gen = Rcpp::wrap(ppd_st(modeling_output, n_pred, m_pred, z_pred, sample_size_pred, spatial_dists_full, neighbors_full, inference_set, params_only_indicator, model_type_indicator));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rho1_update_st
 Rcpp::List rho1_update_st(double rho1_old, arma::mat betat, arma::mat V, double rho2_old, double a_rho1, double b_rho1, double metrop_var_rho1_trans, int acctot_rho1_trans);
 RcppExport SEXP _DLfuse_rho1_update_st(SEXP rho1_oldSEXP, SEXP betatSEXP, SEXP VSEXP, SEXP rho2_oldSEXP, SEXP a_rho1SEXP, SEXP b_rho1SEXP, SEXP metrop_var_rho1_transSEXP, SEXP acctot_rho1_transSEXP) {
@@ -868,6 +888,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_DLfuse_neg_two_loglike_update_st", (DL_FUNC) &_DLfuse_neg_two_loglike_update_st, 3},
     {"_DLfuse_phi_update", (DL_FUNC) &_DLfuse_phi_update, 8},
     {"_DLfuse_ppd_s", (DL_FUNC) &_DLfuse_ppd_s, 10},
+    {"_DLfuse_ppd_st", (DL_FUNC) &_DLfuse_ppd_st, 10},
     {"_DLfuse_rho1_update_st", (DL_FUNC) &_DLfuse_rho1_update_st, 8},
     {"_DLfuse_rho2_update_st", (DL_FUNC) &_DLfuse_rho2_update_st, 8},
     {"_DLfuse_rho3_update_st", (DL_FUNC) &_DLfuse_rho3_update_st, 7},
