@@ -34,7 +34,7 @@ double df = d +
             nu_v_inv;
 
 //Bartlett Decomposition
-arma::mat L = chol(mean);
+arma::mat L = arma::chol(mean);
 arma::mat A(2,2); A.fill(0.00);
 A(1,0) = R::rnorm(0.00,
                   sqrt(1.00));

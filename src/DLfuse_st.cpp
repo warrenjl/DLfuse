@@ -82,7 +82,7 @@ if(model_type_indicator.isNotNull()){
 int d = y.size();
 arma::mat Dw(CMAQ_unique_total, CMAQ_unique_total); Dw.fill(0.00);
 for(int j = 0; j < CMAQ_unique_total; ++ j){
-   Dw(j, j) = sum(neighbors.row(j));
+   Dw(j,j) = sum(neighbors.row(j));
    } 
 arma::mat CAR = Dw - 
                 neighbors;

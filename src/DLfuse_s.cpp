@@ -58,7 +58,7 @@ int n = y.size();
 int m = z.n_rows;
 arma::mat Dw(m, m); Dw.fill(0.00);
 for(int j = 0; j < m; ++ j){
-   Dw(j, j) = sum(neighbors.row(j));
+   Dw(j,j) = sum(neighbors.row(j));
    } 
 arma::mat CAR = Dw - 
                 neighbors;

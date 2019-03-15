@@ -109,8 +109,8 @@ ppd_s <- function(modeling_output, n_pred, m_pred, z_pred, sample_size_pred, spa
     .Call(`_DLfuse_ppd_s`, modeling_output, n_pred, m_pred, z_pred, sample_size_pred, spatial_dists_full, neighbors_full, inference_set, params_only_indicator, model_type_indicator)
 }
 
-ppd_st <- function(modeling_output, n_pred, m_pred, z_pred, sample_size_pred, spatial_dists_full, neighbors_full, inference_set, params_only_indicator = NULL, model_type_indicator = NULL) {
-    .Call(`_DLfuse_ppd_st`, modeling_output, n_pred, m_pred, z_pred, sample_size_pred, spatial_dists_full, neighbors_full, inference_set, params_only_indicator, model_type_indicator)
+ppd_st <- function(modeling_output, n_pred, m_pred, z_pred, sample_size_pred, AQS_key_pred, CMAQ_key_pred, spatial_dists_full, neighbors_full, inference_set, params_only_indicator = NULL, model_type_indicator = NULL) {
+    .Call(`_DLfuse_ppd_st`, modeling_output, n_pred, m_pred, z_pred, sample_size_pred, AQS_key_pred, CMAQ_key_pred, spatial_dists_full, neighbors_full, inference_set, params_only_indicator, model_type_indicator)
 }
 
 rho1_update_st <- function(rho1_old, betat, V, rho2_old, a_rho1, b_rho1, metrop_var_rho1_trans, acctot_rho1_trans) {

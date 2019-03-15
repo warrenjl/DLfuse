@@ -59,17 +59,15 @@ arma::mat neighbors_full_12 = neighbors_full.submat(0, m_pred, (m_pred - 1), (ne
 int n_model = w0.n_rows;
 int m_model = (neighbors_full.n_cols - m_pred);
 double negative_infinity = -std::numeric_limits<double>::infinity();
-
+            
 for(int i = 0; i < inference_samples;  ++ i){
 
+   intercepts_pred.col(i).fill(beta0(inference_set(i) - 1));
    arma::vec w0_pred(n_pred); w0_pred.fill(0.00);
    if(model_type != 3){
  
-     //w0  
-     Rcpp::List Sigma0_info = spatial_corr_fun(phi0(inference_set(i) - 1),
-                                               spatial_dists_full);
-     arma::mat Sigma0_full_inv = Sigma0_info[0];
-     arma::mat Sigma0_full = inv_sympd(Sigma0_full_inv);
+     //w0
+     arma::mat Sigma0_full = exp(-phi0(inference_set(i) - 1)*spatial_dists_full);
      arma::mat Sigma0_11 = Sigma0_full.submat(0, 0, (n_pred - 1), (n_pred - 1));
      arma::mat Sigma0_22 = Sigma0_full.submat(n_pred, n_pred, (n_model + n_pred - 1), (n_model + n_pred - 1));
      arma::mat Sigma0_22_inv = inv_sympd(Sigma0_22);
@@ -80,23 +78,32 @@ for(int i = 0; i < inference_samples;  ++ i){
                              Sigma0_12*(Sigma0_22_inv*trans(Sigma0_12));
 
      for(int j = 0; j < n_pred; ++ j){
-        w0_pred(j) = R::rnorm(w0_pred_mean(j),
-                              sqrt(w0_pred_cov(j,j)));
+        
+        if(sum(Sigma0_12.row(j) == 1) == 0){
+          w0_pred(j) = R::rnorm(w0_pred_mean(j),
+                                sqrt(w0_pred_cov(j,j)));
+          }
+        
+        if(sum(Sigma0_12.row(j) == 1) > 0){
+          w0_pred(j) = w0_pred_mean(j);
+          }
+        
         }
      
-     intercepts_pred.col(i) = beta0(inference_set(i) - 1) + 
+     intercepts_pred.col(i) = intercepts_pred.col(i) + 
                               A11(inference_set(i) - 1)*w0_pred;
      
+     }
+   
+   if(model_type == 3){
+     slopes_pred.col(i).fill(beta1(inference_set(i) - 1));
      }
    
    arma::vec w1_pred(n_pred); w1_pred.fill(0.00);
    if(model_type == 0 || model_type == 1){
 
      //w1      
-     Rcpp::List Sigma1_info = spatial_corr_fun(phi1(inference_set(i) - 1),
-                                               spatial_dists_full);
-     arma::mat Sigma1_full_inv = Sigma1_info[0];
-     arma::mat Sigma1_full = inv_sympd(Sigma1_full_inv);
+     arma::mat Sigma1_full = exp(-phi1(inference_set(i) - 1)*spatial_dists_full);
      arma::mat Sigma1_11 = Sigma1_full.submat(0, 0, (n_pred - 1), (n_pred - 1));
      arma::mat Sigma1_22 = Sigma1_full.submat(n_pred, n_pred, (n_model + n_pred - 1), (n_model + n_pred - 1));
      arma::mat Sigma1_22_inv = inv_sympd(Sigma1_22);
@@ -107,11 +114,20 @@ for(int i = 0; i < inference_samples;  ++ i){
                              Sigma1_12*(Sigma1_22_inv*trans(Sigma1_12));
 
      for(int j = 0; j < n_pred; ++ j){
-        w1_pred(j) = R::rnorm(w1_pred_mean(j),
-                              sqrt(w1_pred_cov(j,j)));
+       
+        if(sum(Sigma1_12.row(j) == 1) == 0){
+          w1_pred(j) = R::rnorm(w1_pred_mean(j),
+                                sqrt(w1_pred_cov(j,j)));
+          }
+       
+        if(sum(Sigma1_12.row(j) == 1) > 0){
+          w1_pred(j) = w1_pred_mean(j);
+          }
+        
         }
      
-     slopes_pred.col(i) = beta1(inference_set(i) - 1) + 
+     slopes_pred.col(i).fill(beta1(inference_set(i) - 1)); 
+     slopes_pred.col(i) = slopes_pred.col(i) +
                           A21(inference_set(i) - 1)*w0_pred +
                           A22(inference_set(i) - 1)*w1_pred;
      
@@ -125,19 +141,25 @@ for(int i = 0; i < inference_samples;  ++ i){
      for(int j = 0; j < m_pred; ++ j){
               
         if(arma::is_finite(sum(neighbors_full.row(j))) == 0){ 
+          
           for(int k = 0; k < m_model; ++ k){
+             
              if(arma::is_finite(neighbors_full_12(j,k)) == 0){
                alpha_pred(j) = alpha(k, (inference_set(i) - 1));  
                }
+             
              }
+          
           }
               
         if(arma::is_finite(sum(neighbors_full.row(j))) == 1){
+          
           double alpha_pred_mean = dot(neighbors_full_12.row(j), alpha.col(inference_set(i) - 1))/sum(neighbors_full_12.row(j));
           double alpha_pred_var = tau2(inference_set(i) - 1)/sum(neighbors_full_12.row(j));
                 
           alpha_pred(j) = R::rnorm(alpha_pred_mean,
                                    sqrt(alpha_pred_var));
+          
           }
         
         }
@@ -149,13 +171,13 @@ for(int i = 0; i < inference_samples;  ++ i){
      }
 
    if(params_only == 0){
+     
      Rcpp::List lagged_covars = construct_lagged_covars_s(z_pred,
                                                           mu_pred,
                                                           alpha_pred,
                                                           sample_size_pred);
      arma::vec lc1 = lagged_covars[0];
       
-     //Predictions
      arma::vec mean_temp = construct_mean_s(beta0(inference_set(i) - 1), 
                                             beta1(inference_set(i) - 1),
                                             A11(inference_set(i) - 1),
@@ -166,7 +188,8 @@ for(int i = 0; i < inference_samples;  ++ i){
                                             diagmat(lc1),
                                             keep5,
                                             sample_size_pred);
-                
+             
+     //Predictions
      for(int j = 0; j < n_pred; ++ j){
         y_pred(j,i) = R::rnorm(mean_temp(j),
                                sqrt(sigma2_epsilon(inference_set(i) - 1)));
@@ -180,9 +203,11 @@ for(int i = 0; i < inference_samples;  ++ i){
      }
    
    if(((i + 1) % int(round(inference_samples*0.05)) == 0)){
+     
      double completion = round(100*((i + 1)/(double)inference_samples));
      Rcpp::Rcout << "Progress: " << completion << "%" << std::endl;
      Rcpp::Rcout << "**************" << std::endl;
+     
      }
     
    }

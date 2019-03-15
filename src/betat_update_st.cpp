@@ -32,7 +32,7 @@ arma::mat cov_betat = inv_sympd((trans(gamma_t)*gamma_t)/sigma2_epsilon + V_inv_
 
 arma::vec mean_betat = cov_betat*((trans(gamma_t)*(y_t - mean_temp_t))/sigma2_epsilon + V_inv_old*Omega*betat_previous);
   
-arma::mat ind_norms = arma::randn(1, 2);
+arma::mat ind_norms = arma::randn(1,2);
 arma::vec betat_t = mean_betat + 
                     trans(ind_norms*arma::chol(cov_betat));
 

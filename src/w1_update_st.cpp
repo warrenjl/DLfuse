@@ -38,7 +38,7 @@ arma::mat cov_w1 = inv_sympd((A22*A22)*mat_piece/sigma2_epsilon + Sigma1_inv);
 
 arma::vec mean_w1 = cov_w1*(A22*mean_piece)/sigma2_epsilon;
   
-arma::mat ind_norms = arma::randn(1, n);
+arma::mat ind_norms = arma::randn(1,n);
 arma::vec w1 = mean_w1 + 
                trans(ind_norms*arma::chol(cov_w1));
 
