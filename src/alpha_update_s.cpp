@@ -18,7 +18,6 @@ Rcpp::List alpha_update_s(arma::vec y,
                           double A22,
                           double A21,
                           double mu,
-                          double tau2_old,
                           arma::vec w0_old,
                           arma::vec w1_old,
                           arma::uvec keep5,
@@ -57,7 +56,7 @@ for(int j = 0; j < m; ++ j){
    second = second +
             R::dnorm(alpha_old(j),
                      (dot(neighbors.row(j), alpha)/sum(neighbors.row(j))),
-                     sqrt(tau2_old/sum(neighbors.row(j))),
+                     sqrt(1.00/sum(neighbors.row(j))),
                      1);
 
    /*First*/
@@ -91,7 +90,7 @@ for(int j = 0; j < m; ++ j){
   first = first +
           R::dnorm(alpha(j),
                    (dot(neighbors.row(j), alpha)/sum(neighbors.row(j))),
-                   sqrt(tau2_old/sum(neighbors.row(j))),
+                   sqrt(1.00/sum(neighbors.row(j))),
                    1);
 
   /*Decision*/

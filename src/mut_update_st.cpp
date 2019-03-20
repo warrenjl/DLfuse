@@ -17,9 +17,7 @@ Rcpp::List mut_update_st(arma::vec y_t,
                          double A11,
                          double A22,
                          double A21,
-                         double mu,
                          double mut_previous,
-                         double sigma2_delta_old,
                          double rho3_old,
                          arma::vec alpha_old,
                          arma::vec w0_old,
@@ -61,7 +59,7 @@ for(int j = 0; j < ss_t; ++ j){
 second = second +
          R::dnorm(mut_t_old,
                   (rho3_old*mut_previous),
-                  sqrt(sigma2_delta_old),
+                  sqrt(1.00),
                   1);
 
 /*First*/
@@ -69,7 +67,6 @@ double mut_t = R::rnorm(mut_t_old,
                         sqrt(metrop_var_mut_t));
 
 lagged_covars_t = construct_lagged_covars_st(z_t,
-                                             mu,
                                              mut_t,
                                              alpha_old,
                                              sample_size_t,
@@ -100,7 +97,7 @@ for(int j = 0; j < ss_t; ++ j){
 first = first +
         R::dnorm(mut_t,
                  (rho3_old*mut_previous),
-                 sqrt(sigma2_delta_old),
+                 sqrt(1.00),
                  1);
 
 /*Decision*/

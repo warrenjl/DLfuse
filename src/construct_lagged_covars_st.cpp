@@ -7,7 +7,6 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 
 Rcpp::List construct_lagged_covars_st(arma::mat z_t,
-                                      double mu, 
                                       double mut_t,
                                       arma::vec alpha,
                                       arma::vec sample_size_t,
@@ -21,7 +20,7 @@ for(int j = 0; j < m_t; ++ j){
   
    for(int k = 0; k < L; ++ k){
   
-      regression_weights(j,k) = pow((R::pnorm(mu + mut_t + alpha(CMAQ_key(j) - 1), 0.00, 1.00, 1, 0)), k);
+      regression_weights(j,k) = pow((R::pnorm(mut_t + alpha(CMAQ_key(j) - 1), 0.00, 1.00, 1, 0)), k);
   
       }
   

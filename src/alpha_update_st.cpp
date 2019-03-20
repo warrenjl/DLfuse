@@ -18,9 +18,7 @@ Rcpp::List alpha_update_st(Rcpp::List y,
                            double A11,
                            double A22,
                            double A21,
-                           double mu,
                            arma::vec mut,
-                           double tau2_old,
                            arma::vec w0_old,
                            arma::vec w1_old,
                            arma::uvec keep7,
@@ -69,13 +67,12 @@ for(int j = 0; j < m; ++ j){
                            1);
         
          }
-      second = second +
-               R::dnorm(alpha_old(j),
-                        (dot(neighbors.row(j), alpha)/sum(neighbors.row(j))),
-                        sqrt(tau2_old/sum(neighbors.row(j))),
-                        1);
-      
       }
+   second = second +
+            R::dnorm(alpha_old(j),
+                     (dot(neighbors.row(j), alpha)/sum(neighbors.row(j))),
+                     sqrt(1.00/sum(neighbors.row(j))),
+                     1);
    
    /*First*/
    alpha(j) = R::rnorm(alpha_old(j), 
@@ -85,7 +82,6 @@ for(int j = 0; j < m; ++ j){
    for(int k = 0; k < d; ++ k){
    
       lagged_covars[k] = construct_lagged_covars_st(z[k],
-                                                    mu,
                                                     mut(k),
                                                     alpha,
                                                     sample_size[k],
@@ -119,14 +115,13 @@ for(int j = 0; j < m; ++ j){
                           1);
         
          }
-     first = first +
-             R::dnorm(alpha(j),
-                      (dot(neighbors.row(j), alpha)/sum(neighbors.row(j))),
-                      sqrt(tau2_old/sum(neighbors.row(j))),
-                      1);
-      
      }
-
+   first = first +
+           R::dnorm(alpha(j),
+                    (dot(neighbors.row(j), alpha)/sum(neighbors.row(j))),
+                    sqrt(1.00/sum(neighbors.row(j))),
+                    1);
+      
    /*Decision*/
    double ratio = exp(first - second);   
    int acc = 1;
@@ -149,7 +144,6 @@ alpha = alpha -
 for(int j = 0; j < d; ++ j){
   
    lagged_covars[j] = construct_lagged_covars_st(z[j],
-                                                 mu,
                                                  mut(j),
                                                  alpha,
                                                  sample_size[j],

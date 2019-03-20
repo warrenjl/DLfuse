@@ -11,8 +11,6 @@ Rcpp::List ppd_st(Rcpp::List modeling_output,
                   int m_pred,
                   arma::mat z_pred,
                   arma::vec sample_size_pred,
-                  arma::vec AQS_key_pred,
-                  arma::vec CMAQ_key_pred,
                   arma::mat spatial_dists_full,
                   arma::mat neighbors_full,
                   arma::vec inference_set,
@@ -50,12 +48,9 @@ arma::vec phi0 = modeling_output[11];
 arma::mat w1 = modeling_output[12];
 arma::vec phi1 = modeling_output[13];
 Rcpp::List lag_info = modeling_output[14];
-arma::vec mu = lag_info[0];
-arma::mat mut = lag_info[1];
-arma::vec sigma2_delta = lag_info[2];
-arma::vec rho3 = lag_info[3];
-arma::mat alpha = lag_info[4];
-arma::vec tau2 = lag_info[5];
+arma::mat mut = lag_info[0];
+arma::vec rho3 = lag_info[1];
+arma::mat alpha = lag_info[2];
 
 int inference_samples = inference_set.size();
 int d = mut.n_rows;
@@ -69,6 +64,9 @@ arma::mat neighbors_full_12 = neighbors_full.submat(0, m_pred, (m_pred - 1), (ne
 int n_model = w0.n_rows;
 int m_model = (neighbors_full.n_cols - m_pred);
 double negative_infinity = -std::numeric_limits<double>::infinity();
+
+arma::mat AQS_key_mat_pred(n_pred, n_pred); AQS_key_mat_pred.eye();
+arma::vec CMAQ_key_pred = linspace<vec>(1, n_pred);
 
 for(int i = 0; i < inference_samples;  ++ i){
   
@@ -88,12 +86,12 @@ for(int i = 0; i < inference_samples;  ++ i){
 
      for(int j = 0; j < n_pred; ++ j){
        
-        if(sum(Sigma0_12.row(j) == 1) == 0){
+        if(w0_pred_cov(j,j) > 0){
           w0_pred(j) = R::rnorm(w0_pred_mean(j),
                                 sqrt(w0_pred_cov(j,j)));
           }
        
-        if(sum(Sigma0_12.row(j) == 1) > 0){
+        if(w0_pred_cov(j,j) == 0){
           w0_pred(j) = w0_pred_mean(j);
           }
        
@@ -117,12 +115,12 @@ for(int i = 0; i < inference_samples;  ++ i){
 
      for(int j = 0; j < n_pred; ++ j){
        
-        if(sum(Sigma1_12.row(j) == 1) == 0){
+        if(w1_pred_cov(j,j) > 0){
           w1_pred(j) = R::rnorm(w1_pred_mean(j),
                                 sqrt(w1_pred_cov(j,j)));
           }
        
-        if(sum(Sigma1_12.row(j) == 1) > 0){
+        if(w1_pred_cov(j,j) == 0){
           w1_pred(j) = w1_pred_mean(j);
           }
        
@@ -136,47 +134,39 @@ for(int i = 0; i < inference_samples;  ++ i){
    Omega(0,0) = rho1(inference_set(i) - 1);
    Omega(1,1) = rho2(inference_set(i) - 1);
    arma::vec betat_pred_mean = Omega*betat_iter.col(d-1);
-   arma::vec betat_pred_cov = V[inference_set(i) - 1];
+   arma::mat betat_pred_cov = V[inference_set(i) - 1];
    arma::mat ind_norms = arma::randn(1,2);
    arma::vec betat_pred = betat_pred_mean + 
                           trans(ind_norms*arma::chol(betat_pred_cov));
    
-   intercepts_pred.col(i).fill(beta0(inference_set(i) - 1));
-   intercepts_pred.col(i) = intercepts_pred.col(i) +  
-                            betat_pred(0);
-    
+   intercepts_pred.col(i).fill(beta0(inference_set(i) - 1) + betat_pred(0));
+     
    if(model_type != 3){
      intercepts_pred.col(i) = intercepts_pred.col(i) +
                               A11(inference_set(i) - 1)*w0_pred;
      }
    
    if(model_type == 3){
-     
-     slopes_pred.col(i).fill(beta1(inference_set(i) - 1));
-     slopes_pred.col(i) = slopes_pred.col(i) +                    
-                          betat_pred(1);
-     
+     slopes_pred.col(i).fill(beta1(inference_set(i) - 1) + betat_pred(1));
      }
    
    if(model_type == 0 || model_type == 1){
      
-     slopes_pred.col(i).fill(beta1(inference_set(i) - 1) + 
-                             betat_pred(1));
+     slopes_pred.col(i).fill(beta1(inference_set(i) - 1) + betat_pred(1));
      slopes_pred.col(i) = slopes_pred.col(i) +
                           A21(inference_set(i) - 1)*w0_pred +
                           A22(inference_set(i) - 1)*w1_pred;
    
      }
       
-   double mu_pred = negative_infinity;    
-   double mut_pred = 0.00;
+   double mut_pred = negative_infinity;
    arma::vec alpha_pred(m_pred); alpha_pred.fill(0.00);
    if(model_type == 0){
      
-     //alpha, mu, mut
+     //alpha, mut
      double mut_pred_mean = rho3(inference_set(i) - 1)*mut((d-1), (inference_set(i) - 1));
      double mut_pred = R::rnorm(mut_pred_mean,
-                                sqrt(sigma2_delta(inference_set(i) - 1)));
+                                sqrt(1.00));
      
      for(int j = 0; j < m_pred; ++ j){
               
@@ -195,7 +185,7 @@ for(int i = 0; i < inference_samples;  ++ i){
         if(arma::is_finite(sum(neighbors_full.row(j))) == 1){
           
           double alpha_pred_mean = dot(neighbors_full_12.row(j), alpha.col(inference_set(i) - 1))/sum(neighbors_full_12.row(j));
-          double alpha_pred_var = tau2(inference_set(i) - 1)/sum(neighbors_full_12.row(j));
+          double alpha_pred_var = 1.00/sum(neighbors_full_12.row(j));
                 
           alpha_pred(j) = R::rnorm(alpha_pred_mean,
                                    sqrt(alpha_pred_var));
@@ -204,9 +194,7 @@ for(int i = 0; i < inference_samples;  ++ i){
         
         }
      
-     mu_pred = mu(inference_set(i) - 1);
-     lags_pred.col(i) = mu_pred +
-                        mut_pred + 
+     lags_pred.col(i) = mut_pred + 
                         alpha_pred;
      
      }
@@ -214,7 +202,6 @@ for(int i = 0; i < inference_samples;  ++ i){
    if(params_only == 0){
      
      Rcpp::List lagged_covars = construct_lagged_covars_st(z_pred,
-                                                           mu_pred,
                                                            mut_pred,
                                                            alpha_pred,
                                                            sample_size_pred,
@@ -233,7 +220,7 @@ for(int i = 0; i < inference_samples;  ++ i){
                                              diagmat(lc1),
                                              keep7,
                                              sample_size_pred,
-                                             AQS_key_pred);
+                                             AQS_key_mat_pred);
                 
      for(int j = 0; j < n_pred; ++ j){
         y_pred(j,i) = R::rnorm(mean_temp(j),

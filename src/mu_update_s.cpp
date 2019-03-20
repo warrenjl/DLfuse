@@ -21,7 +21,6 @@ Rcpp::List mu_update_s(arma::vec y,
                        arma::vec w1_old,
                        arma::uvec keep5,
                        arma::vec sample_size,
-                       double sigma2_mu,
                        double metrop_var_mu,
                        int acctot_mu){
   
@@ -53,7 +52,7 @@ for(int j = 0; j < n; ++ j){
 second = second +
          R::dnorm(mu_old,
                   0.00,
-                  sqrt(sigma2_mu),
+                  sqrt(1.00),
                   1);
 
 /*First*/
@@ -87,7 +86,7 @@ for(int j = 0; j < n; ++ j){
 first = first +
         R::dnorm(mu,
                  0.00,
-                 sqrt(sigma2_mu),
+                 sqrt(1.00),
                  1);
 
 /*Decision*/
