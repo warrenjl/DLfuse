@@ -473,18 +473,21 @@ for(int j = 1; j < mcmc_samples; ++ j){
                                     AQS_key_mat[0]);
    
    arma::vec betat_previous(2); betat_previous.fill(0.00);
-   betat_t = betat_update_st(y[0],
+   arma::vec betat_next = betat_temp.col(1);
+   betat_t = betat_update_st(0,
+                             y[0],
                              mean_temp[0],
                              lagged_covars[0],
                              sigma2_epsilon(j),
                              betat_previous,
+                             betat_next,
                              V[j-1],
                              rho1(j-1),
                              rho2(j-1));
    betat_temp.col(0) = betat_t;
    
    for(int k = 1; k < d; ++ k){
-     
+      
       arma::vec betat_t = betat_temp.col(k);
       arma::vec lc1_t = lc1[k];
       mean_temp[k] = construct_mean_st(beta0(j), 
@@ -501,14 +504,24 @@ for(int j = 1; j < mcmc_samples; ++ j){
                                        AQS_key_mat[k]);
       
       arma::vec betat_previous = betat_temp.col(k-1);
-      betat_t = betat_update_st(y[k],
-                                mean_temp[k],
-                                lagged_covars[k],
-                                sigma2_epsilon(j),
-                                betat_previous,
-                                V[j-1],
-                                rho1(j-1),
-                                rho2(j-1));
+      
+      int last_time_ind = 1;
+      arma::vec betat_next(2); betat_next.fill(0.00);
+      if(k < (d - 1)){
+        last_time_ind = 0;
+        arma::vec betat_next = betat_temp.col(k+1);
+        }
+      
+       betat_t = betat_update_st(last_time_ind,
+                                 y[k],
+                                 mean_temp[k],
+                                 lagged_covars[k],
+                                 sigma2_epsilon(j),
+                                 betat_previous,
+                                 betat_next,
+                                 V[j-1],
+                                 rho1(j-1),
+                                 rho2(j-1));
       betat_temp.col(k) = betat_t;
       
       }
@@ -657,7 +670,8 @@ for(int j = 1; j < mcmc_samples; ++ j){
      //mut Update
      arma::mat betat_temp = betat[j];
      arma::vec betat_t = betat_temp.col(0);
-     Rcpp::List mut_output = mut_update_st(y[0],
+     Rcpp::List mut_output = mut_update_st(0,
+                                           y[0],
                                            z[0],
                                            mut(0, (j-1)),
                                            lagged_covars[0],
@@ -669,6 +683,7 @@ for(int j = 1; j < mcmc_samples; ++ j){
                                            A22(j),
                                            A21(j),
                                            0.00,
+                                           mut(1, (j-1)),
                                            rho3(j-1),
                                            alpha.col(j-1),
                                            w0.col(j-1),
@@ -689,8 +704,16 @@ for(int j = 1; j < mcmc_samples; ++ j){
      
      for(int k = 1; k < d; ++ k){
        
+        int last_time_ind = 1;
+        double mut_next = 0.00;
+        if(k < (d - 1)){
+          last_time_ind = 0;
+          mut_next = mut((k+1), (j-1));
+          }
+       
         arma::vec betat_t = betat_temp.col(k);
-        Rcpp::List mut_output = mut_update_st(y[k],
+        Rcpp::List mut_output = mut_update_st(last_time_ind,
+                                              y[k],
                                               z[k],
                                               mut(k, (j-1)),
                                               lagged_covars[k],
@@ -702,6 +725,7 @@ for(int j = 1; j < mcmc_samples; ++ j){
                                               A22(j),
                                               A21(j),
                                               mut((k-1), j),
+                                              mut_next,
                                               rho3(j-1),
                                               alpha.col(j-1),
                                               w0.col(j-1),

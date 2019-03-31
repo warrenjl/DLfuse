@@ -61,8 +61,8 @@ beta1_update_st <- function(y, mean_temp, lagged_covars, sigma2_epsilon, sample_
     .Call(`_DLfuse_beta1_update_st`, y, mean_temp, lagged_covars, sigma2_epsilon, sample_size, sigma2_beta)
 }
 
-betat_update_st <- function(y_t, mean_temp_t, lagged_covars_t, sigma2_epsilon, betat_previous, V_old, rho1_old, rho2_old) {
-    .Call(`_DLfuse_betat_update_st`, y_t, mean_temp_t, lagged_covars_t, sigma2_epsilon, betat_previous, V_old, rho1_old, rho2_old)
+betat_update_st <- function(last_time_ind, y_t, mean_temp_t, lagged_covars_t, sigma2_epsilon, betat_previous, betat_next, V_old, rho1_old, rho2_old) {
+    .Call(`_DLfuse_betat_update_st`, last_time_ind, y_t, mean_temp_t, lagged_covars_t, sigma2_epsilon, betat_previous, betat_next, V_old, rho1_old, rho2_old)
 }
 
 construct_lagged_covars_s <- function(z, mu, alpha, sample_size) {
@@ -85,8 +85,8 @@ mu_update_s <- function(y, z, mu_old, lagged_covars, sigma2_epsilon, beta0, beta
     .Call(`_DLfuse_mu_update_s`, y, z, mu_old, lagged_covars, sigma2_epsilon, beta0, beta1, A11, A22, A21, alpha_old, w0_old, w1_old, keep5, sample_size, metrop_var_mu, acctot_mu)
 }
 
-mut_update_st <- function(y_t, z_t, mut_t_old, lagged_covars_t, sigma2_epsilon, beta0, beta1, betat_t, A11, A22, A21, mut_previous, rho3_old, alpha_old, w0_old, w1_old, keep7, sample_size_t, AQS_key_mat_t, CMAQ_key_t, metrop_var_mut_t, acctot_mut_t) {
-    .Call(`_DLfuse_mut_update_st`, y_t, z_t, mut_t_old, lagged_covars_t, sigma2_epsilon, beta0, beta1, betat_t, A11, A22, A21, mut_previous, rho3_old, alpha_old, w0_old, w1_old, keep7, sample_size_t, AQS_key_mat_t, CMAQ_key_t, metrop_var_mut_t, acctot_mut_t)
+mut_update_st <- function(last_time_ind, y_t, z_t, mut_t_old, lagged_covars_t, sigma2_epsilon, beta0, beta1, betat_t, A11, A22, A21, mut_previous, mut_next, rho3_old, alpha_old, w0_old, w1_old, keep7, sample_size_t, AQS_key_mat_t, CMAQ_key_t, metrop_var_mut_t, acctot_mut_t) {
+    .Call(`_DLfuse_mut_update_st`, last_time_ind, y_t, z_t, mut_t_old, lagged_covars_t, sigma2_epsilon, beta0, beta1, betat_t, A11, A22, A21, mut_previous, mut_next, rho3_old, alpha_old, w0_old, w1_old, keep7, sample_size_t, AQS_key_mat_t, CMAQ_key_t, metrop_var_mut_t, acctot_mut_t)
 }
 
 neg_two_loglike_update_s <- function(y, mean_temp, sigma2_epsilon) {

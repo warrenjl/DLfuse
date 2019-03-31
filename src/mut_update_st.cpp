@@ -6,7 +6,8 @@ using namespace Rcpp;
 // [[Rcpp::depends(RcppArmadillo)]]
 // [[Rcpp::export]]
 
-Rcpp::List mut_update_st(arma::vec y_t,
+Rcpp::List mut_update_st(int last_time_ind,
+                         arma::vec y_t,
                          arma::mat z_t,
                          double mut_t_old,
                          Rcpp::List lagged_covars_t,
@@ -18,6 +19,7 @@ Rcpp::List mut_update_st(arma::vec y_t,
                          double A22,
                          double A21,
                          double mut_previous,
+                         double mut_next,
                          double rho3_old,
                          arma::vec alpha_old,
                          arma::vec w0_old,
@@ -61,6 +63,15 @@ second = second +
                   (rho3_old*mut_previous),
                   sqrt(1.00),
                   1);
+if(last_time_ind == 0){
+  
+  second = second +
+           R::dnorm(mut_next,
+                    (rho3_old*mut_t_old),
+                    sqrt(1.00),
+                    1);
+  
+  }
 
 /*First*/
 double mut_t = R::rnorm(mut_t_old, 
@@ -99,6 +110,15 @@ first = first +
                  (rho3_old*mut_previous),
                  sqrt(1.00),
                  1);
+if(last_time_ind == 0){
+  
+  first = first +
+          R::dnorm(mut_next,
+                   (rho3_old*mut_t),
+                   sqrt(1.00),
+                   1);
+  
+  }
 
 /*Decision*/
 double ratio = exp(first - second);   

@@ -66,7 +66,7 @@ int m_model = (neighbors_full.n_cols - m_pred);
 double negative_infinity = -std::numeric_limits<double>::infinity();
 
 arma::mat AQS_key_mat_pred(n_pred, n_pred); AQS_key_mat_pred.eye();
-arma::vec CMAQ_key_pred = linspace<vec>(1, n_pred);
+arma::vec CMAQ_key_pred = regspace(1, 1, m_pred);
 
 for(int i = 0; i < inference_samples;  ++ i){
   
