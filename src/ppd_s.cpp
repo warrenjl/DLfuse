@@ -46,6 +46,7 @@ arma::vec phi1 = modeling_output[9];
 Rcpp::List lag_info = modeling_output[10];
 arma::vec mu = lag_info[0];
 arma::mat alpha = lag_info[1];
+arma::vec tau2 = lag_info[2];
 
 int inference_samples = inference_set.size();
 arma::mat y_pred(n_pred, inference_samples); y_pred.fill(0.00);
@@ -154,7 +155,7 @@ for(int i = 0; i < inference_samples;  ++ i){
         if(arma::is_finite(sum(neighbors_full.row(j))) == 1){
           
           double alpha_pred_mean = dot(neighbors_full_12.row(j), alpha.col(inference_set(i) - 1))/sum(neighbors_full_12.row(j));
-          double alpha_pred_var = 1.00/sum(neighbors_full_12.row(j));
+          double alpha_pred_var = tau2(inference_set(i) - 1)/sum(neighbors_full_12.row(j));
                 
           alpha_pred(j) = R::rnorm(alpha_pred_mean,
                                    sqrt(alpha_pred_var));

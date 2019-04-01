@@ -8,6 +8,7 @@ using namespace Rcpp;
 
 Rcpp::List rho3_update_st(double rho3_old,
                           arma::vec mut,
+                          double sigma2_delta,
                           double a_rho3,
                           double b_rho3,
                           double metrop_var_rho3_trans,
@@ -26,7 +27,7 @@ for(int j = 1; j < d; ++ j){
    second = second + 
             R::dnorm(mut(j),
                      mean_temp_t,
-                     sqrt(1.00),
+                     sqrt(sigma2_delta),
                      1);
    
    }
@@ -47,7 +48,7 @@ for(int j = 1; j < d; ++ j){
    first = first + 
            R::dnorm(mut(j),
                     mean_temp_t,
-                    sqrt(1.00),
+                    sqrt(sigma2_delta),
                     1);
   
    }

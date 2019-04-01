@@ -18,7 +18,9 @@ Rcpp::List alpha_update_st(Rcpp::List y,
                            double A11,
                            double A22,
                            double A21,
+                           double mu,
                            arma::vec mut,
+                           double tau2_old,
                            arma::vec w0_old,
                            arma::vec w1_old,
                            arma::uvec keep7,
@@ -71,7 +73,7 @@ for(int j = 0; j < m; ++ j){
    second = second +
             R::dnorm(alpha_old(j),
                      (dot(neighbors.row(j), alpha)/sum(neighbors.row(j))),
-                     sqrt(1.00/sum(neighbors.row(j))),
+                     sqrt(tau2_old/sum(neighbors.row(j))),
                      1);
    
    /*First*/
@@ -82,6 +84,7 @@ for(int j = 0; j < m; ++ j){
    for(int k = 0; k < d; ++ k){
    
       lagged_covars[k] = construct_lagged_covars_st(z[k],
+                                                    mu,
                                                     mut(k),
                                                     alpha,
                                                     sample_size[k],
@@ -119,7 +122,7 @@ for(int j = 0; j < m; ++ j){
    first = first +
            R::dnorm(alpha(j),
                     (dot(neighbors.row(j), alpha)/sum(neighbors.row(j))),
-                    sqrt(1.00/sum(neighbors.row(j))),
+                    sqrt(tau2_old/sum(neighbors.row(j))),
                     1);
       
    /*Decision*/
@@ -138,12 +141,12 @@ for(int j = 0; j < m; ++ j){
    
   } 
 
-alpha = alpha -
-        mean(alpha);  //Centering-on-the-Fly (ICAR)
+alpha = (alpha - mean(alpha))/stddev(alpha);  //Centering-on-the-Fly (ICAR) + \Phi(.) stabilization
 
 for(int j = 0; j < d; ++ j){
   
    lagged_covars[j] = construct_lagged_covars_st(z[j],
+                                                 mu,
                                                  mut(j),
                                                  alpha,
                                                  sample_size[j],

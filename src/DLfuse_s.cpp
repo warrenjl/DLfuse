@@ -22,6 +22,8 @@ Rcpp::List DLfuse_s(int mcmc_samples,
                     Rcpp::Nullable<double> beta_sigma2_epsilon_prior = R_NilValue,
                     Rcpp::Nullable<double> sigma2_beta_prior = R_NilValue,
                     Rcpp::Nullable<double> sigma2_A_prior = R_NilValue,
+                    Rcpp::Nullable<double> alpha_tau2_prior = R_NilValue,
+                    Rcpp::Nullable<double> beta_tau2_prior = R_NilValue,
                     Rcpp::Nullable<double> alpha_phi0_prior = R_NilValue,
                     Rcpp::Nullable<double> beta_phi0_prior = R_NilValue,
                     Rcpp::Nullable<double> alpha_phi1_prior = R_NilValue,
@@ -34,6 +36,7 @@ Rcpp::List DLfuse_s(int mcmc_samples,
                     Rcpp::Nullable<double> A21_init = R_NilValue,
                     Rcpp::Nullable<double> mu_init = R_NilValue,
                     Rcpp::Nullable<Rcpp::NumericVector> alpha_init = R_NilValue,
+                    Rcpp::Nullable<double> tau2_init = R_NilValue,
                     Rcpp::Nullable<Rcpp::NumericVector> w0_init = R_NilValue,
                     Rcpp::Nullable<double> phi0_init = R_NilValue,
                     Rcpp::Nullable<Rcpp::NumericVector> w1_init = R_NilValue,
@@ -49,9 +52,18 @@ if(model_type_indicator.isNotNull()){
   model_type = Rcpp::as<int>(model_type_indicator);
   }
 
+//Miscellaneous Information
+int m = z.n_rows;
+arma::mat Dw(m,m); Dw.fill(0.00);
+for(int j = 0; j < m; ++ j){
+   Dw(j,j) = sum(neighbors.row(j));
+   } 
+arma::mat CAR = Dw - 
+                neighbors;
+int G = 1.00;  //G Always Equal to One in this Case (One Island because of Inverse Distance Weighting)
+
 //Defining Parameters and Quantities of Interest
 int n = y.size();
-int m = z.n_rows;
 double max_dist = spatial_dists.max();
 
 arma::vec sigma2_epsilon(mcmc_samples); sigma2_epsilon.fill(0.00);
@@ -62,6 +74,7 @@ arma::vec A22(mcmc_samples); A22.fill(0.00);
 arma::vec A21(mcmc_samples); A21.fill(0.00);
 arma::vec mu(mcmc_samples); mu.fill(0.00);
 arma::mat alpha(m, mcmc_samples); alpha.fill(0.00);
+arma::vec tau2(mcmc_samples); tau2.fill(0.00);
 arma::mat w0(n, mcmc_samples); w0.fill(0.00);
 arma::vec phi0(mcmc_samples); phi0.fill(0.00);
 arma::mat w1(n, mcmc_samples); w1.fill(0.00);
@@ -87,6 +100,16 @@ if(sigma2_beta_prior.isNotNull()){
 double sigma2_A = 1.00;
 if(sigma2_A_prior.isNotNull()){
   sigma2_A = Rcpp::as<double>(sigma2_A_prior);
+  }
+
+double alpha_tau2 = 3.00;
+if(alpha_tau2_prior.isNotNull()){
+  alpha_tau2 = Rcpp::as<double>(alpha_tau2_prior);
+  }
+
+double beta_tau2 = 2.00;
+if(beta_tau2_prior.isNotNull()){
+  beta_tau2 = Rcpp::as<double>(beta_tau2_prior);
   }
 
 double alpha_phi0 = 1.00;
@@ -148,6 +171,11 @@ if(mu_init.isNotNull()){
 alpha.col(0).fill(0.00);
 if(alpha_init.isNotNull()){
   alpha.col(0) = Rcpp::as<arma::vec>(alpha_init);
+  }
+
+tau2(0) = 1.00;
+if(tau2_init.isNotNull()){
+  tau2(0) = Rcpp::as<double>(tau2_init);
   }
 
 w0.col(0).fill(0.00);
@@ -392,6 +420,7 @@ for(int j = 1; j < mcmc_samples; ++ j){
                                               A22(j),
                                               A21(j),
                                               mu(j),
+                                              tau2(j-1),
                                               w0.col(j-1),
                                               w1.col(j-1),
                                               keep5,
@@ -404,6 +433,13 @@ for(int j = 1; j < mcmc_samples; ++ j){
      lagged_covars = alpha_output[2];
      lc1 = Rcpp::as<arma::vec>(lagged_covars[0]);
      lc2 = Rcpp::as<arma::vec>(lagged_covars[1]);
+     
+     //tau2 Update
+     tau2(j) = tau2_update(G,
+                           CAR,
+                           alpha.col(j),
+                           alpha_tau2,
+                           beta_tau2);
      
      }
      
@@ -576,7 +612,8 @@ Rcpp::List metrop_info = Rcpp::List::create(Rcpp::Named("acctot_A11_trans") = ac
                                             Rcpp::Named("acctot_phi1_trans") = acctot_phi1_trans);
 
 Rcpp::List lag_info = Rcpp::List::create(Rcpp::Named("mu") = mu,
-                                         Rcpp::Named("alpha") = alpha);
+                                         Rcpp::Named("alpha") = alpha,
+                                         Rcpp::Named("tau2") = tau2);
                                   
 return Rcpp::List::create(Rcpp::Named("sigma2_epsilon") = sigma2_epsilon,
                           Rcpp::Named("beta0") = beta0,

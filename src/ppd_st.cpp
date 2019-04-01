@@ -48,9 +48,12 @@ arma::vec phi0 = modeling_output[11];
 arma::mat w1 = modeling_output[12];
 arma::vec phi1 = modeling_output[13];
 Rcpp::List lag_info = modeling_output[14];
-arma::mat mut = lag_info[0];
-arma::vec rho3 = lag_info[1];
-arma::mat alpha = lag_info[2];
+arma::vec mu = lag_info[0];
+arma::mat mut = lag_info[1];
+arma::vec sigma2_delta = lag_info[2];
+arma::vec rho3 = lag_info[3];
+arma::mat alpha = lag_info[4];
+arma::vec tau2 = lag_info[5];
 
 int inference_samples = inference_set.size();
 int d = mut.n_rows;
@@ -158,15 +161,15 @@ for(int i = 0; i < inference_samples;  ++ i){
                           A22(inference_set(i) - 1)*w1_pred;
    
      }
-      
+     
    double mut_pred = negative_infinity;
    arma::vec alpha_pred(m_pred); alpha_pred.fill(0.00);
    if(model_type == 0){
      
-     //alpha, mut
+     //mut, alpha
      double mut_pred_mean = rho3(inference_set(i) - 1)*mut((d-1), (inference_set(i) - 1));
      double mut_pred = R::rnorm(mut_pred_mean,
-                                sqrt(1.00));
+                                sqrt(sigma2_delta(inference_set(i) - 1)));
      
      for(int j = 0; j < m_pred; ++ j){
               
@@ -185,7 +188,7 @@ for(int i = 0; i < inference_samples;  ++ i){
         if(arma::is_finite(sum(neighbors_full.row(j))) == 1){
           
           double alpha_pred_mean = dot(neighbors_full_12.row(j), alpha.col(inference_set(i) - 1))/sum(neighbors_full_12.row(j));
-          double alpha_pred_var = 1.00/sum(neighbors_full_12.row(j));
+          double alpha_pred_var = tau2(inference_set(i) - 1)/sum(neighbors_full_12.row(j));
                 
           alpha_pred(j) = R::rnorm(alpha_pred_mean,
                                    sqrt(alpha_pred_var));
@@ -194,7 +197,8 @@ for(int i = 0; i < inference_samples;  ++ i){
         
         }
      
-     lags_pred.col(i) = mut_pred + 
+     lags_pred.col(i) = mu(inference_set(i) - 1) + 
+                        mut_pred + 
                         alpha_pred;
      
      }
@@ -202,6 +206,7 @@ for(int i = 0; i < inference_samples;  ++ i){
    if(params_only == 0){
      
      Rcpp::List lagged_covars = construct_lagged_covars_st(z_pred,
+                                                           mu(inference_set(i) - 1),
                                                            mut_pred,
                                                            alpha_pred,
                                                            sample_size_pred,
