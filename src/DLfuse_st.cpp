@@ -844,7 +844,7 @@ for(int j = 1; j < mcmc_samples; ++ j){
         
         }
      
-     //Centering for Stability + \Phi(.) stabilization
+     //Standardizing for Stability + \Phi(.) stabilization
      mut.col(j) = (mut.col(j) - mean(mut.col(j)))/stddev(mut.col(j));
      for(int k = 0; k < d; ++ k){
        
@@ -981,7 +981,7 @@ for(int j = 1; j < mcmc_samples; ++ j){
    if(model_type == 0 || model_type == 1){
      
      //w1 Update
-     keep6(0) = 0; keep6(1) = 1; keep6(2) = 2; keep6(3) = 3;; keep6(4) = 4; keep6(5) = 5;
+     keep6(0) = 0; keep6(1) = 1; keep6(2) = 2; keep6(3) = 3; keep6(4) = 4; keep6(5) = 5;
      betat_temp = Rcpp::as<arma::mat>(betat[j]);
      for(int k = 0; k < d; ++ k){
        

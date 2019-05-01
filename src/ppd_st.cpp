@@ -89,12 +89,12 @@ for(int i = 0; i < inference_samples;  ++ i){
 
      for(int j = 0; j < n_pred; ++ j){
        
-        if(w0_pred_cov(j,j) > 0){
+        if(sum(spatial_dists_full.row(j) == 0.00) == 1){
           w0_pred(j) = R::rnorm(w0_pred_mean(j),
                                 sqrt(w0_pred_cov(j,j)));
           }
        
-        if(w0_pred_cov(j,j) == 0){
+        if(sum(spatial_dists_full.row(j) == 0.00) > 1){
           w0_pred(j) = w0_pred_mean(j);
           }
        
@@ -118,12 +118,12 @@ for(int i = 0; i < inference_samples;  ++ i){
 
      for(int j = 0; j < n_pred; ++ j){
        
-        if(w1_pred_cov(j,j) > 0){
+        if(sum(spatial_dists_full.row(j) == 0.00) == 1){
           w1_pred(j) = R::rnorm(w1_pred_mean(j),
                                 sqrt(w1_pred_cov(j,j)));
           }
        
-        if(w1_pred_cov(j,j) == 0){
+        if(sum(spatial_dists_full.row(j) == 0.00) > 1){
           w1_pred(j) = w1_pred_mean(j);
           }
        
@@ -133,6 +133,7 @@ for(int i = 0; i < inference_samples;  ++ i){
    
    //betat
    arma::mat betat_iter = betat[inference_set(i) - 1];
+   
    arma::mat Omega(2,2); Omega.fill(0.00);
    Omega(0,0) = rho1(inference_set(i) - 1);
    Omega(1,1) = rho2(inference_set(i) - 1);
@@ -141,6 +142,7 @@ for(int i = 0; i < inference_samples;  ++ i){
    arma::mat ind_norms = arma::randn(1,2);
    arma::vec betat_pred = betat_pred_mean + 
                           trans(ind_norms*arma::chol(betat_pred_cov));
+   betat_pred = betat_iter.col(2);
    
    intercepts_pred.col(i).fill(beta0(inference_set(i) - 1) + betat_pred(0));
      

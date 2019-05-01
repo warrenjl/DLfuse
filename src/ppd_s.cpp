@@ -79,12 +79,12 @@ for(int i = 0; i < inference_samples;  ++ i){
 
      for(int j = 0; j < n_pred; ++ j){
         
-        if(w0_pred_cov(j,j) > 0){
+        if(sum(spatial_dists_full.row(j) == 0.00) == 1){
           w0_pred(j) = R::rnorm(w0_pred_mean(j),
                                 sqrt(w0_pred_cov(j,j)));
           }
         
-        if(w0_pred_cov(j,j) == 0){
+        if(sum(spatial_dists_full.row(j) == 0.00) > 1){
           w0_pred(j) = w0_pred_mean(j);
           }
         
@@ -115,12 +115,12 @@ for(int i = 0; i < inference_samples;  ++ i){
 
      for(int j = 0; j < n_pred; ++ j){
        
-        if(w1_pred_cov(j,j) > 0){
+        if(sum(spatial_dists_full.row(j) == 0.00) == 1){
           w1_pred(j) = R::rnorm(w1_pred_mean(j),
                                 sqrt(w1_pred_cov(j,j)));
           }
        
-        if(w1_pred_cov(j,j) == 0){
+        if(sum(spatial_dists_full.row(j) == 0.00) > 1){
           w1_pred(j) = w1_pred_mean(j);
           }
         

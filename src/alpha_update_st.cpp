@@ -141,7 +141,7 @@ for(int j = 0; j < m; ++ j){
    
   } 
 
-alpha = (alpha - mean(alpha))/stddev(alpha);  //Centering-on-the-Fly (ICAR) + \Phi(.) stabilization
+alpha = (alpha - mean(alpha))/stddev(alpha);  //Standardizing-on-the-Fly (ICAR) + \Phi(.) stabilization
 
 for(int j = 0; j < d; ++ j){
   
