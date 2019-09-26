@@ -1,0 +1,443 @@
+---
+output:
+  pdf_document: default
+  word_document: default
+  html_document: default
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# DLfuse: Distributed Lag Data Fusion for Estimating Ambient Air Pollution
+
+## DLfuse_Example
+
+[1] Simulate data from the proposed model:
+
+* Setting the reproducibility seed and initializing packages for data simulation: 
+```{r}
+set.seed(2568)
+
+library(DLfuse)
+library(geoR)  #Spatial covariance functions
+library(mnormt)  #Multivariate normal distribution
+library(matrixStats)  #colMedians
+```
+
+* Setting the global data values:
+```{r}
+##########################################
+#Full CMAQ Grid
+##########################################
+m<-(12^2)
+grid<-matrix(0, 
+             nrow = m, 
+             ncol = 2)
+counter<-1
+for(j in 1:sqrt(m)){
+   for(k in 1:sqrt(m)){
+
+      grid[counter,]<-c(j,k)
+      counter<-counter + 
+               1
+
+      }
+   }
+
+neighbors<-1/as.matrix(dist(grid,
+                            diag = TRUE, 
+                            upper = TRUE))
+diag(neighbors)<-0
+
+CAR<-diag(rowSums(neighbors)) - 
+     neighbors
+
+########################################################
+#Full AQS Locations
+########################################################
+sample_size<-rpois(n = m,
+                   lambda = 1)
+sample_size<-pmax(sample_size, 
+                  rep(1, 
+                      times = m))
+
+locs<-matrix(runif(n = (2*sum(sample_size)),
+                   min = 0,
+                   max = 1),
+             ncol = 2)
+spatial_dists<-as.matrix(dist(locs,
+                              diag = TRUE,
+                              upper = TRUE))
+diag(spatial_dists)<-0
+
+CMAQ_key<-rep(0, 
+              times = sum(sample_size))
+counter<-0
+for(j in 1:length(sample_size)){
+
+   CMAQ_key[(1 + counter):(sample_size[j] + counter)]<-j
+   counter<-counter + 
+            sample_size[j]
+
+   }
+
+#############################################################################
+#True Spatial Parameter Settings
+#############################################################################
+sigma2_epsilon_true<-0.05
+
+beta0_true<-0.25
+beta1_true<-1.75
+
+A11_true<-0.05
+A22_true<-0.05
+A21_true<- -0.01
+
+phi0_true<-1.50
+Sigma0_true<-cov.spatial(spatial_dists,
+                         cov.model="exponential",
+                         cov.pars=c(1, (1/phi0_true)))
+w0_true<-rmnorm(n=1,
+                mean=rep(0, times=sum(sample_size)),
+                varcov=Sigma0_true)
+w0_true<-w0_true - 
+         mean(w0_true)
+beta0_tilde_true<-A11_true*w0_true
+
+phi1_true<-1.50
+Sigma1_true<-cov.spatial(spatial_dists,
+                         cov.model="exponential",
+                         cov.pars=c(1, (1/phi1_true)))
+w1_true<-rmnorm(n=1,
+                mean=rep(0, times=sum(sample_size)),
+                varcov=Sigma1_true)
+w1_true<-w1_true - 
+         mean(w1_true)
+beta1_tilde_true<-A21_true*w0_true +
+                  A22_true*w1_true
+
+tau2_true<-1.00
+rho_true<-0.99  #ICAR Model Approximation
+CAR_cov_true<-tau2_true*chol2inv(chol(rho_true*CAR + (1 - rho_true)*diag(m)))
+alpha_true<-rmnorm(n = 1,
+                   mean = rep(0, 
+                              times = m),
+                   varcov = CAR_cov_true)
+alpha_true<-(alpha_true - mean(alpha_true))/sd(alpha_true)
+
+mu_true<-1.00
+
+########################################################
+#Creating Lagged Covariates and AQS Data
+########################################################
+L<-11
+z<-matrix(rgamma(n = (length(sample_size)*L), 
+                 shape = 1, 
+                 rate = 1), 
+          nrow = length(sample_size), 
+          ncol = L)
+covars_true<-construct_lagged_covars_s(z,
+                                       mu_true,
+                                       alpha_true,
+                                       sample_size)[[1]]
+```
+
+* Simulating the analysis dataset:
+```{r}
+y<-rnorm(n = sum(sample_size),
+         mean = ((beta0_true + beta0_tilde_true) + 
+                (beta1_true + beta1_tilde_true)*covars_true),
+         sd = sqrt(sigma2_epsilon_true))
+```
+
+[2] Fit DLfuse to a Subset of the Data:
+
+```{r echo=TRUE}
+samples<-11000
+
+test_set<-sort(sample(c(1:m),
+                      size = round(0.80*m),
+                      replace = FALSE))
+
+CMAQ_key_test_set<-rep(0, 
+                       times = length(CMAQ_key))
+for(j in 1:length(test_set)){
+   CMAQ_key_test_set[CMAQ_key == test_set[j]]<-1
+   }
+
+dlfuse_results<-
+DLfuse_s(mcmc_samples = samples,
+         y = y[CMAQ_key_test_set == 1],
+         z = z[test_set,],
+         sample_size = sample_size[test_set],
+         spatial_dists = spatial_dists[(CMAQ_key_test_set == 1), 
+                                       (CMAQ_key_test_set == 1)], 
+         neighbors = neighbors[test_set, test_set], 
+         metrop_var_A11_trans = (0.70^2),
+         metrop_var_A22_trans = (0.80^2),
+         metrop_var_mu = (0.20^2),
+         metrop_var_alpha = rep((1.00^2), 
+                                times = nrow(neighbors[test_set, test_set])),
+         metrop_var_phi0_trans = (0.50^2),
+         metrop_var_phi1_trans = (0.50^2),
+         model_type_indicator = 0)
+```
+
+[3]  Comparing Parameter Estimates to True Values:
+
+```{r}
+burnin<-1000
+thin<-10
+keep_set<-seq((burnin + 1), 
+              samples, 
+              thin)
+
+par(mfrow=c(1,2))
+covars_est<-construct_lagged_covars_s(z[test_set,],
+                                      mean(dlfuse_results$lag_info$mu[keep_set]),
+                                      rowMeans(dlfuse_results$lag_info$alpha[,keep_set]),
+                                      sample_size[test_set])[[1]]
+
+plot(covars_true[CMAQ_key_test_set == 1], 
+     covars_est)
+abline(0,1)
+
+true<-c(sigma2_epsilon_true,
+        (beta0_true + w0_true[CMAQ_key_test_set == 1]),
+        (beta1_true + w1_true[CMAQ_key_test_set == 1]))
+
+est<-c(mean(dlfuse_results$sigma2_epsilon[keep_set]), 
+       rowMeans(matrix(dlfuse_results$beta0[keep_set], 
+                       nrow=sum(sample_size[test_set]), 
+                       ncol=length(keep_set)) + dlfuse_results$w0[,keep_set]),
+       rowMeans(matrix(dlfuse_results$beta1[keep_set], 
+                       nrow=sum(sample_size[test_set]), 
+                       ncol=length(keep_set)) + dlfuse_results$w1[,keep_set]))
+
+plot(est, true)
+abline(0,1)
+```
+
+[4]  Spatial Predictions of Validation Data:
+
+```{r}
+spatial_dists_full<-as.matrix(dist(rbind(locs[CMAQ_key_test_set == 0,], 
+                                         locs[CMAQ_key_test_set == 1,]), 
+                                   diag = TRUE,
+                                   upper = TRUE))
+diag(spatial_dists_full)<-0
+loc_temp<-rbind(locs[CMAQ_key_test_set == 0,], locs[CMAQ_key_test_set == 1,])
+for(j in 1:nrow(loc_temp)){
+   for(k in 1:nrow(loc_temp)){
+      if(prod(loc_temp[j,] == loc_temp[k,]) == 1){
+        spatial_dists_full[j,k]<-0
+        }
+      }
+   }
+
+neighbors_full<-1/as.matrix(dist(rbind(unique(grid[-test_set,]), unique(grid[test_set,])), 
+                                 diag = TRUE,
+                                 upper = TRUE))
+diag(neighbors_full)<-0
+loc_temp<-rbind(unique(grid[-test_set,]), unique(grid[test_set,]))
+for(j in 1:nrow(loc_temp)){
+   for(k in 1:nrow(loc_temp)){
+      if(prod(loc_temp[j,] == loc_temp[k,]) == 1){
+        neighbors_full[j,k]<-Inf
+        }
+      }
+   }
+diag(neighbors_full)<-0
+
+dlfuse_pred_results<-ppd_s(modeling_output = dlfuse_results,
+                           n_pred = length(y[CMAQ_key_test_set == 0]),
+                           m_pred = nrow(z[-test_set, ]),
+                           z_pred = z[-test_set,],
+                           sample_size_pred = sample_size[-test_set],
+                           spatial_dists_full = spatial_dists_full,  
+                           neighbors_full = neighbors_full,  
+                           inference_set = keep_set,
+                           params_only_indicator = 0,
+                           model_type_indicator = 0)
+```
+
+[5]  Comparison with Other Approaches:
+
+```{r}
+slr_results<-
+DLfuse_s(mcmc_samples = samples,
+         y = y[CMAQ_key_test_set == 1],
+         z = z[test_set,],
+         sample_size = sample_size[test_set],
+         spatial_dists = spatial_dists[(CMAQ_key_test_set == 1), 
+                                       (CMAQ_key_test_set == 1)], 
+         neighbors = neighbors[test_set, test_set], 
+         metrop_var_A11_trans = (0.70^2),
+         metrop_var_A22_trans = (0.80^2),
+         metrop_var_mu = (0.20^2),
+         metrop_var_alpha = rep((2.00^2), 
+                                times = nrow(neighbors[test_set, test_set])),
+         metrop_var_phi0_trans = (0.50^2),
+         metrop_var_phi1_trans = (0.50^2),
+         model_type_indicator = 3)
+
+slr_pred_results<-
+ppd_s(modeling_output = slr_results,
+      n_pred = length(y[CMAQ_key_test_set == 0]),
+      m_pred = nrow(z[-test_set, ]),
+      z_pred = z[-test_set,],
+      sample_size_pred = sample_size[-test_set],
+      spatial_dists_full = spatial_dists_full,  
+      neighbors_full = neighbors_full,  
+      inference_set = keep_set,
+      params_only_indicator = 0,
+      model_type_indicator = 3)
+
+ok_results<-
+DLfuse_s(mcmc_samples = samples,
+         y = y[CMAQ_key_test_set == 1],
+         z = z[test_set,],
+         sample_size = sample_size[test_set],
+         spatial_dists = spatial_dists[(CMAQ_key_test_set == 1), 
+                                       (CMAQ_key_test_set == 1)], 
+         neighbors = neighbors[test_set, test_set], 
+         metrop_var_A11_trans = (0.70^2),
+         metrop_var_A22_trans = (0.80^2),
+         metrop_var_mu = (0.20^2),
+         metrop_var_alpha = rep((2.00^2), 
+                                times = nrow(neighbors[test_set, test_set])),
+         metrop_var_phi0_trans = (0.50^2),
+         metrop_var_phi1_trans = (0.50^2),
+         model_type_indicator = 2)
+
+ok_pred_results<-
+ppd_s(modeling_output = ok_results,
+      n_pred = length(y[CMAQ_key_test_set == 0]),
+      m_pred = nrow(z[-test_set, ]),
+      z_pred = z[-test_set,],
+      sample_size_pred = sample_size[-test_set],
+      spatial_dists_full = spatial_dists_full,  
+      neighbors_full = neighbors_full,  
+      inference_set = keep_set,
+      params_only_indicator = 0,
+      model_type_indicator = 2)
+
+ds_results<-
+DLfuse_s(mcmc_samples = samples,
+         y = y[CMAQ_key_test_set == 1],
+         z = z[test_set,],
+         sample_size = sample_size[test_set],
+         spatial_dists = spatial_dists[(CMAQ_key_test_set == 1), 
+                                       (CMAQ_key_test_set == 1)], 
+         neighbors = neighbors[test_set, test_set], 
+         metrop_var_A11_trans = (0.70^2),
+         metrop_var_A22_trans = (0.80^2),
+         metrop_var_mu = (0.20^2),
+         metrop_var_alpha = rep((2.00^2), 
+                                times = nrow(neighbors[test_set, test_set])),
+         metrop_var_phi0_trans = (0.50^2),
+         metrop_var_phi1_trans = (0.50^2),
+         model_type_indicator = 1)
+
+ds_pred_results<-
+ppd_s(modeling_output = ds_results,
+      n_pred = length(y[CMAQ_key_test_set == 0]),
+      m_pred = nrow(z[-test_set, ]),
+      z_pred = z[-test_set,],
+      sample_size_pred = sample_size[-test_set],
+      spatial_dists_full = spatial_dists_full,  
+      neighbors_full = neighbors_full,  
+      inference_set = keep_set,
+      params_only_indicator = 0,
+      model_type_indicator = 1)
+
+#Results Matrix
+results<-matrix(0,
+                nrow = 3,
+                ncol = 4)
+colnames(results)<-c("dlfuse", "slr", "ok", "ds")
+rownames(results)<-c("mse", "cover", "length")
+
+#DLfuse
+cover<-rep(0, 
+           times=length(y[CMAQ_key_test_set == 0]))
+len<-rep(0, 
+         times=length(y[CMAQ_key_test_set == 0]))
+for(j in 1:length(y[CMAQ_key_test_set == 0])){
+
+   ci<-quantile(dlfuse_pred_results[[1]][j,], c(0.025, 0.975))
+   if((ci[1] <= y[CMAQ_key_test_set == 0][j]) & (ci[2] >= y[CMAQ_key_test_set == 0][j])){
+     cover[j]<-1
+     }
+   len[j]<-ci[2] -
+           ci[1]
+
+   }
+results[1,1]<-mean((y[CMAQ_key_test_set == 0] - 
+                   rowMedians(dlfuse_pred_results[[1]]))^2)
+results[2,1]<-mean(cover)
+results[3,1]<-mean(len)
+        
+#SLR               
+cover<-rep(0, 
+           times=length(y[CMAQ_key_test_set == 0]))
+len<-rep(0, 
+           times=length(y[CMAQ_key_test_set == 0]))
+for(j in 1:length(y[CMAQ_key_test_set == 0])){
+
+   ci<-quantile(slr_pred_results[[1]][j,], c(0.025, 0.975))
+   if((ci[1] <= y[CMAQ_key_test_set == 0][j]) & (ci[2] >= y[CMAQ_key_test_set == 0][j])){
+     cover[j]<-1
+     }
+   len[j]<-ci[2] -
+           ci[1]
+
+   }
+results[1,2]<-mean((y[CMAQ_key_test_set == 0] - 
+                   rowMedians(slr_pred_results[[1]]))^2)
+results[2,2]<-mean(cover)
+results[3,2]<-mean(len)
+
+#OK               
+cover<-rep(0, 
+           times=length(y[CMAQ_key_test_set == 0]))
+len<-rep(0, 
+           times=length(y[CMAQ_key_test_set == 0]))
+for(j in 1:length(y[CMAQ_key_test_set == 0])){
+
+   ci<-quantile(ok_pred_results[[1]][j,], c(0.025, 0.975))
+   if((ci[1] <= y[CMAQ_key_test_set == 0][j]) & (ci[2] >= y[CMAQ_key_test_set == 0][j])){
+     cover[j]<-1
+     }
+   len[j]<-ci[2] -
+           ci[1]
+
+   }
+results[1,3]<-mean((y[CMAQ_key_test_set == 0] - 
+                   rowMedians(ok_pred_results[[1]]))^2)
+results[2,3]<-mean(cover)
+results[3,3]<-mean(len)
+
+#DS               
+cover<-rep(0, 
+           times=length(y[CMAQ_key_test_set == 0]))
+len<-rep(0, 
+           times=length(y[CMAQ_key_test_set == 0]))
+for(j in 1:length(y[CMAQ_key_test_set == 0])){
+
+   ci<-quantile(ds_pred_results[[1]][j,], c(0.025, 0.975))
+   if((ci[1] <= y[CMAQ_key_test_set == 0][j]) & (ci[2] >= y[CMAQ_key_test_set == 0][j])){
+     cover[j]<-1
+     }
+   len[j]<-ci[2] -
+           ci[1]
+
+   }
+results[1,4]<-mean((y[CMAQ_key_test_set == 0] - 
+                   rowMedians(ds_pred_results[[1]]))^2)
+results[2,4]<-mean(cover)
+results[3,4]<-mean(len)
+
+results
+```
+
+
