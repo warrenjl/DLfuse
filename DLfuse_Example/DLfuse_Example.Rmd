@@ -202,16 +202,30 @@ plot(covars_true[CMAQ_key_test_set == 1],
 abline(0,1)
 
 true<-c(sigma2_epsilon_true,
-        (beta0_true + w0_true[CMAQ_key_test_set == 1]),
-        (beta1_true + w1_true[CMAQ_key_test_set == 1]))
+        (beta0_true + beta0_tilde_true[CMAQ_key_test_set == 1]),
+        (beta1_true + beta1_tilde_true[CMAQ_key_test_set == 1]))
 
 est<-c(mean(dlfuse_results$sigma2_epsilon[keep_set]), 
        rowMeans(matrix(dlfuse_results$beta0[keep_set], 
-                       nrow=sum(sample_size[test_set]), 
-                       ncol=length(keep_set)) + dlfuse_results$w0[,keep_set]),
+                       nrow = sum(sample_size[test_set]), 
+                       ncol = length(keep_set), 
+                       byrow = TRUE) + 
+                matrix(dlfuse_results$A11[keep_set],
+                       nrow = sum(sample_size[test_set]),
+                       ncol = length(keep_set),
+                       byrow = TRUE)*dlfuse_results$w0[,keep_set]),
        rowMeans(matrix(dlfuse_results$beta1[keep_set], 
-                       nrow=sum(sample_size[test_set]), 
-                       ncol=length(keep_set)) + dlfuse_results$w1[,keep_set]))
+                       nrow = sum(sample_size[test_set]), 
+                       ncol = length(keep_set),
+                       byrow = TRUE) + 
+                matrix(dlfuse_results$A21[keep_set],
+                       nrow = sum(sample_size[test_set]),
+                       ncol = length(keep_set),
+                       byrow = TRUE)*dlfuse_results$w0[,keep_set] +
+                matrix(dlfuse_results$A22[keep_set],
+                       nrow = sum(sample_size[test_set]),
+                       ncol = length(keep_set),
+                       byrow = TRUE)*dlfuse_results$w1[,keep_set]))
 
 plot(est, true)
 abline(0,1)
