@@ -170,8 +170,8 @@ for(int i = 0; i < inference_samples;  ++ i){
      
      //mut, alpha
      double mut_pred_mean = rho3(inference_set(i) - 1)*mut((d-1), (inference_set(i) - 1));
-     double mut_pred = R::rnorm(mut_pred_mean,
-                                sqrt(sigma2_delta(inference_set(i) - 1)));
+     mut_pred = R::rnorm(mut_pred_mean,
+                         sqrt(sigma2_delta(inference_set(i) - 1)));
      
      for(int j = 0; j < m_pred; ++ j){
               
