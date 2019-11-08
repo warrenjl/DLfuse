@@ -94,21 +94,23 @@ A21_true<- -0.01
 
 phi0_true<-1.50
 Sigma0_true<-cov.spatial(spatial_dists,
-                         cov.model="exponential",
-                         cov.pars=c(1, (1/phi0_true)))
-w0_true<-rmnorm(n=1,
-                mean=rep(0, times=sum(sample_size)),
-                varcov=Sigma0_true)
+                         cov.model = "exponential",
+                         cov.pars = c(1, (1/phi0_true)))
+w0_true<-rmnorm(n = 1,
+                mean = rep(0, 
+                           times=sum(sample_size)),
+                varcov = Sigma0_true)
 w0_true<-w0_true - 
          mean(w0_true)
 beta0_tilde_true<-A11_true*w0_true
 
 phi1_true<-1.50
 Sigma1_true<-cov.spatial(spatial_dists,
-                         cov.model="exponential",
-                         cov.pars=c(1, (1/phi1_true)))
-w1_true<-rmnorm(n=1,
-                mean=rep(0, times=sum(sample_size)),
+                         cov.model = "exponential",
+                         cov.pars = c(1, (1/phi1_true)))
+w1_true<-rmnorm(n = 1,
+                mean = rep(0, 
+                           times = sum(sample_size)),
                 varcov=Sigma1_true)
 w1_true<-w1_true - 
          mean(w1_true)
@@ -122,12 +124,13 @@ alpha_true<-rmnorm(n = 1,
                    mean = rep(0, 
                               times = m),
                    varcov = CAR_cov_true)
-alpha_true<-(alpha_true - mean(alpha_true))/sd(alpha_true)
+alpha_true<-alpha_true - 
+            mean(alpha_true)
 
 mu_true<-1.00
 
 ########################################################
-#Creating Lagged Covariates and AQS Data
+#Creating Lagged Covariates
 ########################################################
 L<-11
 z<-matrix(rgamma(n = (length(sample_size)*L), 
@@ -149,7 +152,7 @@ y<-rnorm(n = sum(sample_size),
          sd = sqrt(sigma2_epsilon_true))
 ```
 
-[2] Fit DLfuse to a Subset of the Data:
+[2] Fit DLfuse to a subset of the data:
 
 ```{r echo=TRUE}
 samples<-11000
@@ -182,7 +185,7 @@ DLfuse_s(mcmc_samples = samples,
          model_type_indicator = 0)
 ```
 
-[3]  Comparing Parameter Estimates to True Values:
+[3]  Comparing parameter estimates to true values:
 
 ```{r}
 burnin<-1000
@@ -231,7 +234,7 @@ plot(est, true)
 abline(0,1)
 ```
 
-[4]  Spatial Predictions of Validation Data:
+[4]  Spatial predictions of validation data:
 
 ```{r}
 spatial_dists_full<-as.matrix(dist(rbind(locs[CMAQ_key_test_set == 0,], 
@@ -274,7 +277,7 @@ dlfuse_pred_results<-ppd_s(modeling_output = dlfuse_results,
                            model_type_indicator = 0)
 ```
 
-[5]  Comparison with Other Approaches:
+[5]  Comparison with other approaches:
 
 ```{r}
 slr_results<-

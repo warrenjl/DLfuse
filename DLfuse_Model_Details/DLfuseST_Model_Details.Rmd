@@ -1,0 +1,106 @@
+---
+output:
+  pdf_document: default
+  word_document: default
+  html_document: default
+---
+# DLfuse: Distributed Lag Data Fusion for Estimating Ambient Air Pollution
+
+## DLfuseST Statistical Model
+$$Y_t\left(\textbf{s}_{ij}\right) = \widetilde{\boldsymbol{\beta}}_{0t}\left(\textbf{s}_{ij}\right) + \widetilde{\boldsymbol{\beta}}_{1t}\left(\textbf{s}_{ij}\right) \sum_{l=0}^L \bar{\text{x}}_{B_i, t, l} \left(\frac{\pi_{B_i, t, l}}{\sum_{k=0}^L \pi_{B_i, t, k}}\right) + \epsilon_t\left(\textbf{s}_{ij}\right),\ \epsilon_t\left(\textbf{s}_{ij}\right) |\sigma^2_{\epsilon} \stackrel{\text{iid}}{\sim}\text{N}\left(0, \sigma^2_{\epsilon}\right)$$
+
+$$\pi_{B_i, t, l} = \Phi\left(\mu + \alpha_{B_i} + \mu_t \right)^{l},\ 0=1, ..., L;$$
+
+$$\alpha_{B_i}|\boldsymbol{\alpha}_{-B_i}, \tau^2 \stackrel{\text{ind}}{\sim}\text{N}\left(\frac{\sum_{j=1}^m w_{ij} \alpha_{B_j}}{\sum_{j=1}^m w_{ij}}, \frac{\tau^2}{\sum_{j=1}^m w_{ij}}\right),\ i=1,...,m;$$
+
+$$\mu_t = \kappa \mu_{t-1} + \delta_t,\ \delta_t|\sigma^2_{\delta} \stackrel{\text{iid}}{\sim}\text{N}\left(0, \sigma^2_{\delta}\right),\ \ t=1,...,d;$$
+
+$$\widetilde{\beta}_{kt}\left(\textbf{s}_{ij}\right) = \beta_k + \beta_k\left(\textbf{s}_{ij}\right) + \beta_{kt},\ k=0,1;$$
+
+$$\begin{pmatrix} 
+\beta_0\left(\textbf{s}_{ij}\right) \\
+\beta_1\left(\textbf{s}_{ij}\right) 
+\end{pmatrix} = A \begin{pmatrix} 
+w_0\left(\textbf{s}_{ij}\right) \\
+w_1\left(\textbf{s}_{ij}\right) 
+\end{pmatrix};\ A = \begin{pmatrix} 
+A_{11} & 0 \\
+A_{21} & A_{22} 
+\end{pmatrix};$$
+
+$$\begin{pmatrix} 
+\beta_{0t} \\
+\beta_{1t}
+\end{pmatrix} = \Omega \begin{pmatrix} 
+\beta_{0, t-1} \\
+\beta_{1, t-1}
+\end{pmatrix} + \boldsymbol{\eta}_{t},\ \Omega_{ii} = \rho_i,\ \boldsymbol{\eta}_t |V \stackrel{\text{iid}}{\sim} \text{MVN}\left(\boldsymbol{0}_2, V\right),\ t=1,...,d$$
+
+$$\boldsymbol{w}_k=\left\{w_k\left(\textbf{s}_{11}\right),..., w_k\left(\textbf{s}_{mn_m}\right)\right\}^{\text{T}}|\phi_k \stackrel{\text{ind}}{\sim}\text{MVN}\left\{0, \Sigma_k\left(\phi_k\right)\right\},\ k=0,1$$
+
+$$\text{Corr}\left\{w_k\left(\textbf{s}_{ij}\right), w_k\left(\textbf{s}_{i'j'}\right)\right\}=\exp\left\{-\phi_k||\textbf{s}_{ij} - \textbf{s}_{i'j'}||\right\};$$
+
+* $i = 1, ...., m;$
+
+* $j = 1, ..., n_i$
+
+## Prior Information
+$\beta_k \stackrel{\text{iid}}{\sim}\text{N}\left(0, \sigma^2_{\beta}\right),\ k=0,1;$
+
+* Default setting: $\sigma^2_{\beta} = 10,000.$
+
+$\sigma^2_{\epsilon} \sim \text{Inverse Gamma}\left(a_{\sigma^2_{\epsilon}}, b_{\sigma^2_{\epsilon}}\right);$
+
+* Default setting: $a_{\sigma^2_{\theta}} = 0.01$, $b_{\sigma^2_{\theta}} = 0.01.$
+
+$\tau^2 \sim \text{Inverse Gamma}\left(a_{\tau^2}, b_{\tau^2}\right);$
+
+* Default setting: $a_{\sigma^2_{\theta}} = 3$, $b_{\sigma^2_{\theta}} = 2.$
+
+$\sigma^2_{\delta} \sim \text{Inverse Gamma}\left(a_{\sigma^2_{\delta}}, b_{\sigma^2_{\delta}}\right);$
+
+* Default setting: $a_{\sigma^2_{\delta}} = 3$, $b_{\sigma^2_{\delta}} = 2.$
+
+$\ln\left(A_{11}\right)$, $\ln\left(A_{22}\right)$, $A_{21} \stackrel{\text{iid}}{\sim}\text{N}\left(0, \sigma^2_A\right);$
+
+* Default setting: $\sigma^2_A = 1.$
+
+$\mu \sim \text{N}\left(0, 1\right);$
+
+$\phi_k \stackrel{\text{iid}}{\sim}\text{Gamma}\left(\alpha_{\phi_k}, \beta_{\phi_k}\right),\ k=0,1,$
+
+* Default setting: $a_{\phi_k} = 1$, $b_{\phi_k} = 1.$
+
+$\kappa, \rho_1, \rho_2 \stackrel{\text{iid}}{\sim}\text{Uniform}\left(0,1\right)$; 
+
+$V^{-1} \sim \text{Wishart}\left(\Omega^*, \rho^*\right)$;
+
+* Default setting: $\Omega^* = I_2$, $\rho^* = 3$.
+
+## Default Initial Values
+* $\beta_k = 0$ for all $k$;
+
+* $\sigma^2_{\epsilon} = 1$;
+
+* $A_{11} = A_{22} = 1,\ A_{21}=0$;
+
+* $\mu = 0$;
+
+* $\alpha_{B_i} = 0$ for all $i$;
+
+* $\tau^2 = 1$;
+
+* $w_k\left(\textbf{s}_{ij}\right) = 0$ for all $k,i,j$;
+
+* $\phi_k = -\ln\left(0.05\right)/\max\left\{||\textbf{s}_{ij} - \textbf{s}_{i'j'}||\right\}$ for all $k$;
+
+* $V$ a two-by-two identity matrix;
+
+* $\kappa = \rho_1 = \rho_2 = 0.50$;
+
+* $\sigma^2_{\delta} = 1$;
+
+* $\beta_{kt} = 0$ for all $k,t$;
+
+* $\mu_t = 0$ for all $t$.
+
