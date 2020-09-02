@@ -3,7 +3,7 @@
 using namespace arma;
 using namespace Rcpp;
 
-// [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::depends(RcppArmadillo)]] 
 // [[Rcpp::export]]
 
 Rcpp::List DLfuse_s(int mcmc_samples,
