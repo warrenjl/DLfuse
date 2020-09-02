@@ -28,7 +28,8 @@ Rcpp::List alpha_update_st(Rcpp::List y,
                            Rcpp::List AQS_key,
                            Rcpp::List CMAQ_key,
                            arma::vec metrop_var_alpha,
-                           arma::vec acctot_alpha){
+                           arma::vec acctot_alpha,
+                           int weights_definition){
 
 int d = y.size();  
 int m = alpha_old.size();
@@ -88,7 +89,8 @@ for(int j = 0; j < m; ++ j){
                                                     mut(k),
                                                     alpha,
                                                     sample_size[k],
-                                                    CMAQ_key[k]);
+                                                    CMAQ_key[k],
+                                                    weights_definition);
       
       Rcpp::List lagged_covars_t = lagged_covars[k];
       arma::vec lc1_t = lagged_covars_t[0];
@@ -150,7 +152,8 @@ for(int j = 0; j < d; ++ j){
                                                  mut(j),
                                                  alpha,
                                                  sample_size[j],
-                                                 CMAQ_key[j]);
+                                                 CMAQ_key[j],
+                                                 weights_definition);
    
    }
 

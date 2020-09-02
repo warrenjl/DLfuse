@@ -22,7 +22,8 @@ Rcpp::List mu_update_s(arma::vec y,
                        arma::uvec keep5,
                        arma::vec sample_size,
                        double metrop_var_mu,
-                       int acctot_mu){
+                       int acctot_mu,
+                       int weights_definition){
   
 int n = y.size();
 
@@ -49,11 +50,22 @@ for(int j = 0; j < n; ++ j){
                      sqrt(sigma2_epsilon),
                      1);
    }
-second = second +
-         R::dnorm(mu_old,
-                  0.00,
-                  sqrt(1.00),
-                  1);
+
+if(weights_definition == 0){
+  second = second +
+           R::dnorm(mu_old,
+                    0.00,
+                    sqrt(1.00),
+                    1);
+  }
+
+if(weights_definition == 1){
+  second = second +
+           R::dnorm(mu_old,
+                    0.00,
+                    sqrt(1.00),
+                    1);
+  }
 
 /*First*/
 double mu = R::rnorm(mu_old, 
@@ -61,7 +73,8 @@ double mu = R::rnorm(mu_old,
 lagged_covars = construct_lagged_covars_s(z,
                                           mu, 
                                           alpha_old,
-                                          sample_size);
+                                          sample_size,
+                                          weights_definition);
 arma::vec lc1 = lagged_covars(0);
 
 arma::vec mean_temp = construct_mean_s(beta0, 
@@ -83,11 +96,22 @@ for(int j = 0; j < n; ++ j){
                     sqrt(sigma2_epsilon),
                     1);
    }
-first = first +
-        R::dnorm(mu,
-                 0.00,
-                 sqrt(1.00),
-                 1);
+
+if(weights_definition == 0){
+  first = first +
+          R::dnorm(mu,
+                   0.00,
+                   sqrt(1.00),
+                   1);
+  }
+
+if(weights_definition == 1){
+  first = first +
+          R::dnorm(mu,
+                   0.00,
+                   sqrt(1.00),
+                   1);
+  }
 
 /*Decision*/
 double ratio = exp(first - second);   

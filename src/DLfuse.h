@@ -24,7 +24,8 @@ Rcpp::List phi_update(double phi_old,
 Rcpp::List construct_lagged_covars_s(arma::mat z,
                                      double mu, 
                                      arma::vec alpha,
-                                     arma::vec sample_size);
+                                     arma::vec sample_size,
+                                     int weights_indicator);
 
 arma::vec construct_mean_s(double beta0, 
                            double beta1,
@@ -111,7 +112,8 @@ Rcpp::List mu_update_s(arma::vec y,
                        arma::uvec keep5,
                        arma::vec sample_size,
                        double metrop_var_mu,
-                       int acctot_mu);
+                       int acctot_mu,
+                       int weights_definition);
 
 Rcpp::List alpha_update_s(arma::vec y,
                           arma::mat z,
@@ -131,7 +133,8 @@ Rcpp::List alpha_update_s(arma::vec y,
                           arma::uvec keep5,
                           arma::vec sample_size,
                           arma::vec metrop_var_alpha,
-                          arma::vec acctot_alpha);
+                          arma::vec acctot_alpha,
+                          int weights_definition);
 
 arma::vec w0_update_s(arma::vec y,
                       arma::vec mean_temp,
@@ -187,6 +190,7 @@ Rcpp::List DLfuse_s(int mcmc_samples,
                     Rcpp::Nullable<double> phi0_init,
                     Rcpp::Nullable<Rcpp::NumericVector> w1_init,
                     Rcpp::Nullable<double> phi1_init,
+                    Rcpp::Nullable<int> weights_definition_indicator,
                     Rcpp::Nullable<int> model_type_indicator); 
 
 Rcpp::List ppd_s(Rcpp::List modeling_output,
@@ -198,6 +202,7 @@ Rcpp::List ppd_s(Rcpp::List modeling_output,
                  arma::mat neighbors_full,
                  arma::vec inference_set,
                  Rcpp::Nullable<int> params_only_indicator,
+                 Rcpp::Nullable<int> weights_definition_indicator,
                  Rcpp::Nullable<int> model_type_indicator);
 
 //Functions Specific to the Spatiotemporal Model
@@ -206,7 +211,8 @@ Rcpp::List construct_lagged_covars_st(arma::mat z_t,
                                       double mut_t,
                                       arma::vec alpha,
                                       arma::vec sample_size_t,
-                                      arma::vec CMAQ_key_t);
+                                      arma::vec CMAQ_key_t,
+                                      int weights_definition);
 
 arma::vec construct_mean_st(double beta0, 
                             double beta1,
@@ -337,7 +343,8 @@ Rcpp::List mu_update_st(Rcpp::List y,
                         Rcpp::List AQS_key_mat,
                         Rcpp::List CMAQ_key,
                         double metrop_var_mu,
-                        int acctot_mu);
+                        int acctot_mu,
+                        int weights_definition);
 
 Rcpp::List mut_update_st(int last_time_ind,
                          arma::vec y_t,
@@ -364,7 +371,8 @@ Rcpp::List mut_update_st(int last_time_ind,
                          arma::mat AQS_key_mat_t,
                          arma::vec CMAQ_key_t,
                          double metrop_var_mut_t,
-                         int acctot_mut_t);
+                         int acctot_mut_t,
+                         int weights_definition);
 
 double sigma2_delta_update_st(arma::vec mut,
                               double rho3_old,
@@ -401,7 +409,8 @@ Rcpp::List alpha_update_st(Rcpp::List y,
                            Rcpp::List AQS_key_mat,
                            Rcpp::List CMAQ_key,
                            arma::vec metrop_var_alpha,
-                           arma::vec acctot_alpha);
+                           arma::vec acctot_alpha,
+                           int weights_definition);
 
 arma::vec w0_update_st(Rcpp::List y,
                        Rcpp::List AQS_key_mat,
@@ -484,6 +493,7 @@ Rcpp::List DLfuse_st(int mcmc_samples,
                      Rcpp::Nullable<double> phi0_init,
                      Rcpp::Nullable<Rcpp::NumericVector> w1_init,
                      Rcpp::Nullable<double> phi1_init,
+                     Rcpp::Nullable<int> weights_definition_indicator,
                      Rcpp::Nullable<int> model_type_indicator);
 
 Rcpp::List ppd_st(Rcpp::List modeling_output,
@@ -497,6 +507,7 @@ Rcpp::List ppd_st(Rcpp::List modeling_output,
                   arma::mat neighbors_full,
                   arma::vec inference_set,
                   Rcpp::Nullable<int> params_only_indicator,
+                  Rcpp::Nullable<int> weights_definition_indicator,
                   Rcpp::Nullable<int> model_type_indicator);
 
 #endif // __DLfuse__

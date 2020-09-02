@@ -31,7 +31,8 @@ Rcpp::List mut_update_st(int last_time_ind,
                          arma::mat AQS_key_mat_t,
                          arma::vec CMAQ_key_t,
                          double metrop_var_mut_t,
-                         int acctot_mut_t){
+                         int acctot_mut_t,
+                         int weights_definition){
  
 int ss_t = y_t.size();
   
@@ -84,7 +85,8 @@ lagged_covars_t = construct_lagged_covars_st(z_t,
                                              mut_t,
                                              alpha_old,
                                              sample_size_t,
-                                             CMAQ_key_t);
+                                             CMAQ_key_t,
+                                             weights_definition);
 arma::vec lc1_t = lagged_covars_t[0];
   
 arma::vec mean_temp_t = construct_mean_st(beta0, 

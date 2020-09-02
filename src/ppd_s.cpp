@@ -15,6 +15,7 @@ Rcpp::List ppd_s(Rcpp::List modeling_output,
                  arma::mat neighbors_full,
                  arma::vec inference_set,
                  Rcpp::Nullable<int> params_only_indicator = R_NilValue,
+                 Rcpp::Nullable<int> weights_definition_indicator = R_NilValue,
                  Rcpp::Nullable<int> model_type_indicator = R_NilValue){
   
 //params_only_indicator = 0: Predictions of the Outcome and Parameters are Provided
@@ -24,6 +25,13 @@ if(params_only_indicator.isNotNull()){
    params_only = Rcpp::as<int>(params_only_indicator);
    }
   
+//weights_indicator = 0: probit, power
+//weights_indicator = 1: exponential, spherical
+int weights_definition = 0;
+if(weights_definition_indicator.isNotNull()){
+  weights_definition = Rcpp::as<int>(weights_definition_indicator);
+  }
+
 //model_type_indicator = 0: Full, Distributed Lag Model
 //model_type_indicator = 1: No Distributed Lags, Original Model
 //model_type_indicator = 2: Ordinary Kriging Model
@@ -175,7 +183,8 @@ for(int i = 0; i < inference_samples;  ++ i){
      Rcpp::List lagged_covars = construct_lagged_covars_s(z_pred,
                                                           mu_pred,
                                                           alpha_pred,
-                                                          sample_size_pred);
+                                                          sample_size_pred,
+                                                          weights_definition);
      arma::vec lc1 = lagged_covars[0];
       
      arma::vec mean_temp = construct_mean_s(beta0(inference_set(i) - 1), 

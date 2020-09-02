@@ -24,7 +24,8 @@ Rcpp::List alpha_update_s(arma::vec y,
                           arma::uvec keep5,
                           arma::vec sample_size,
                           arma::vec metrop_var_alpha,
-                          arma::vec acctot_alpha){
+                          arma::vec acctot_alpha,
+                          int weights_definition){
 
 int n = y.size();  
 int m = alpha_old.size();
@@ -66,7 +67,8 @@ for(int j = 0; j < m; ++ j){
    lagged_covars = construct_lagged_covars_s(z,
                                              mu, 
                                              alpha,
-                                             sample_size);
+                                             sample_size,
+                                             weights_definition);
    arma::vec lc1 = lagged_covars(0);
    
    arma::vec mean_temp = construct_mean_s(beta0, 
@@ -111,7 +113,8 @@ alpha = (alpha - mean(alpha))/stddev(alpha);  //Centering-on-the-Fly (ICAR) + \P
 lagged_covars = construct_lagged_covars_s(z,
                                           mu, 
                                           alpha,
-                                          sample_size);
+                                          sample_size,
+                                          weights_definition);
 
 return Rcpp::List::create(Rcpp::Named("alpha") = alpha,
                           Rcpp::Named("acctot_alpha") = acctot_alpha,

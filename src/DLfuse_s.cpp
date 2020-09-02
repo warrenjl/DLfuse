@@ -41,8 +41,16 @@ Rcpp::List DLfuse_s(int mcmc_samples,
                     Rcpp::Nullable<double> phi0_init = R_NilValue,
                     Rcpp::Nullable<Rcpp::NumericVector> w1_init = R_NilValue,
                     Rcpp::Nullable<double> phi1_init = R_NilValue,
+                    Rcpp::Nullable<int> weights_definition_indicator = R_NilValue,
                     Rcpp::Nullable<int> model_type_indicator = R_NilValue){
   
+//weights_indicator = 0: probit, power
+//weights_indicator = 1: exponential, spherical
+int weights_definition = 0;
+if(weights_definition_indicator.isNotNull()){
+  weights_definition = Rcpp::as<int>(weights_definition_indicator);
+  }
+
 //model_type_indicator = 0: Full, Distributed Lag Model
 //model_type_indicator = 1: No Distributed Lags, Original Model
 //model_type_indicator = 2: Ordinary Kriging Model
@@ -207,14 +215,16 @@ Rcpp::List spatial_corr1_info = spatial_corr_fun(phi1(0),
 Rcpp::List lagged_covars = construct_lagged_covars_s(z,
                                                      mu(0), 
                                                      alpha.col(0),
-                                                     sample_size);
+                                                     sample_size,
+                                                     weights_definition);
 
 if(model_type == 1 || model_type == 3){
   double negative_infinity = -std::numeric_limits<double>::infinity();
   lagged_covars = construct_lagged_covars_s(z,
                                             negative_infinity, 
                                             alpha.col(0),
-                                            sample_size);
+                                            sample_size,
+                                            weights_definition);
   }
   
 arma::vec lc1 = lagged_covars[0];
@@ -399,7 +409,8 @@ for(int j = 1; j < mcmc_samples; ++ j){
                                         keep5,
                                         sample_size,
                                         metrop_var_mu,
-                                        acctot_mu);
+                                        acctot_mu,
+                                        weights_definition);
    
      mu(j) = Rcpp::as<double>(mu_output[0]);
      acctot_mu = mu_output[1];
@@ -426,7 +437,8 @@ for(int j = 1; j < mcmc_samples; ++ j){
                                               keep5,
                                               sample_size,
                                               metrop_var_alpha,
-                                              acctot_alpha);   
+                                              acctot_alpha,
+                                              weights_definition);   
    
      alpha.col(j) = as<arma::vec>(alpha_output[0]);
      acctot_alpha = as<arma::vec>(alpha_output[1]);

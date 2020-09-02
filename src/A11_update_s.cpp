@@ -1,4 +1,4 @@
-#include "RcppArmadillo.h"
+#include "RcppArmadillo.h"55
 #include "DLfuse.h"
 using namespace arma;
 using namespace Rcpp;

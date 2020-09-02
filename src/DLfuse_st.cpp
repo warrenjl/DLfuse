@@ -66,7 +66,15 @@ Rcpp::List DLfuse_st(int mcmc_samples,
                      Rcpp::Nullable<double> phi0_init = R_NilValue,
                      Rcpp::Nullable<Rcpp::NumericVector> w1_init = R_NilValue,
                      Rcpp::Nullable<double> phi1_init = R_NilValue,
+                     Rcpp::Nullable<int> weights_definition_indicator = R_NilValue,
                      Rcpp::Nullable<int> model_type_indicator = R_NilValue){
+
+//weights_indicator = 0: probit, power
+//weights_indicator = 1: exponential, spherical
+int weights_definition = 0;
+if(weights_definition_indicator.isNotNull()){
+  weights_definition = Rcpp::as<int>(weights_definition_indicator);
+  }  
   
 //model_type_indicator = 0: Full, Distributed Lag Model
 //model_type_indicator = 1: No Distributed Lags, Original Model
@@ -348,7 +356,8 @@ for(int j = 0; j < d; ++ j){
                                                            mut(j,0),
                                                            alpha.col(0),
                                                            sample_size[j],
-                                                           CMAQ_key[j]);
+                                                           CMAQ_key[j],
+                                                           weights_definition);
    lagged_covars[j] = lagged_covars_t;
    
    arma::vec lc1_t = lagged_covars_t[0];
@@ -368,7 +377,8 @@ if(model_type == 1 || model_type == 3){
                                                              negative_infinity,
                                                              alpha.col(0),
                                                              sample_size[j],
-                                                             CMAQ_key[j]);
+                                                             CMAQ_key[j],
+                                                             weights_definition);
      lagged_covars[j] = lagged_covars_t;
     
      arma::vec lc1_t = lagged_covars_t[0];
@@ -748,7 +758,8 @@ for(int j = 1; j < mcmc_samples; ++ j){
                                          AQS_key_mat,
                                          CMAQ_key,
                                          metrop_var_mu,
-                                         acctot_mu);
+                                         acctot_mu,
+                                         weights_definition);
      
      mu(j) = Rcpp::as<double>(mu_output[0]);
      acctot_mu = mu_output[1];
@@ -789,7 +800,8 @@ for(int j = 1; j < mcmc_samples; ++ j){
                                            AQS_key_mat[0],
                                            CMAQ_key[0],
                                            metrop_var_mut(0),
-                                           acctot_mut(0));
+                                           acctot_mut(0),
+                                           weights_definition);
       
      mut(0,j) = Rcpp::as<double>(mut_output[0]);
      acctot_mut(0) = Rcpp::as<int>(mut_output[1]);
@@ -833,7 +845,8 @@ for(int j = 1; j < mcmc_samples; ++ j){
                                               AQS_key_mat[k],
                                               CMAQ_key[k],
                                               metrop_var_mut(k),
-                                              acctot_mut(k));
+                                              acctot_mut(k),
+                                              weights_definition);
        
         mut(k,j) = Rcpp::as<double>(mut_output[0]);
         acctot_mut(k) = Rcpp::as<int>(mut_output[1]);
@@ -853,7 +866,8 @@ for(int j = 1; j < mcmc_samples; ++ j){
                                                                 mut(k,j),
                                                                 alpha.col(j-1),
                                                                 sample_size[k],
-                                                                CMAQ_key[k]);
+                                                                CMAQ_key[k],
+                                                                weights_definition);
         lagged_covars[k] = lagged_covars_t;
        
         arma::vec lc1_t = lagged_covars_t[0];
@@ -904,7 +918,8 @@ for(int j = 1; j < mcmc_samples; ++ j){
                                                AQS_key_mat,
                                                CMAQ_key,
                                                metrop_var_alpha,
-                                               acctot_alpha);   
+                                               acctot_alpha,
+                                               weights_definition);   
    
      alpha.col(j) = as<arma::vec>(alpha_output[0]);
      acctot_alpha = as<arma::vec>(alpha_output[1]);

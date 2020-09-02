@@ -26,7 +26,8 @@ Rcpp::List mu_update_st(Rcpp::List y,
                         Rcpp::List AQS_key_mat,
                         Rcpp::List CMAQ_key,
                         double metrop_var_mu,
-                        int acctot_mu){
+                        int acctot_mu,
+                        int weights_definition){
   
 int d = y.size();
 
@@ -64,11 +65,22 @@ for(int j = 0; j < d; ++ j){
       } 
   
    }
-second = second +
-         R::dnorm(mu_old,
-                  0.00,
-                  sqrt(1.00),
-                  1);
+
+if(weights_definition == 0){
+  second = second +
+           R::dnorm(mu_old,
+                    0.00,
+                    sqrt(1.00),
+                    1);
+  }
+
+if(weights_definition == 1){
+  second = second +
+           R::dnorm(mu_old,
+                    0.00,
+                    sqrt(1.00),
+                    1);
+  }
 
 /*First*/
 double mu = R::rnorm(mu_old, 
@@ -82,7 +94,8 @@ for(int j = 0; j < d; ++ j){
                                                  mut_old(j),
                                                  alpha_old,
                                                  sample_size[j],
-                                                 CMAQ_key[j]);
+                                                 CMAQ_key[j],
+                                                 weights_definition);
    Rcpp::List lagged_covars_t = lagged_covars[j];
    arma::vec lc1_t = lagged_covars_t[0];
    arma::vec betat_t = betat.col(j);
@@ -112,11 +125,22 @@ for(int j = 0; j < d; ++ j){
       } 
   
    }
-first = first +
-        R::dnorm(mu,
-                 0.00,
-                 sqrt(1.00),
-                 1);
+
+if(weights_definition == 0){
+  first = first +
+          R::dnorm(mu,
+                   0.00,
+                   sqrt(1.00),
+                   1);
+  }
+
+if(weights_definition == 1){
+  first = first +
+          R::dnorm(mu,
+                   0.00,
+                   sqrt(1.00),
+                   1);
+  }
 
 /*Decision*/
 double ratio = exp(first - second);   

@@ -25,24 +25,24 @@ A22_update_st <- function(y, AQS_key_mat, A22_old, lagged_covars, sigma2_epsilon
     .Call(`_DLfuse_A22_update_st`, y, AQS_key_mat, A22_old, lagged_covars, sigma2_epsilon, beta0, beta1, betat, A11, A21_old, w0_old, w1_old, keep7, sample_size, sigma2_A, metrop_var_A22_trans, acctot_A22_trans)
 }
 
-DLfuse_s <- function(mcmc_samples, y, z, sample_size, spatial_dists, neighbors, metrop_var_A11_trans, metrop_var_A22_trans, metrop_var_mu, metrop_var_alpha, metrop_var_phi0_trans, metrop_var_phi1_trans, alpha_sigma2_epsilon_prior = NULL, beta_sigma2_epsilon_prior = NULL, sigma2_beta_prior = NULL, sigma2_A_prior = NULL, alpha_tau2_prior = NULL, beta_tau2_prior = NULL, alpha_phi0_prior = NULL, beta_phi0_prior = NULL, alpha_phi1_prior = NULL, beta_phi1_prior = NULL, sigma2_epsilon_init = NULL, beta0_init = NULL, beta1_init = NULL, A11_init = NULL, A22_init = NULL, A21_init = NULL, mu_init = NULL, alpha_init = NULL, tau2_init = NULL, w0_init = NULL, phi0_init = NULL, w1_init = NULL, phi1_init = NULL, model_type_indicator = NULL) {
-    .Call(`_DLfuse_DLfuse_s`, mcmc_samples, y, z, sample_size, spatial_dists, neighbors, metrop_var_A11_trans, metrop_var_A22_trans, metrop_var_mu, metrop_var_alpha, metrop_var_phi0_trans, metrop_var_phi1_trans, alpha_sigma2_epsilon_prior, beta_sigma2_epsilon_prior, sigma2_beta_prior, sigma2_A_prior, alpha_tau2_prior, beta_tau2_prior, alpha_phi0_prior, beta_phi0_prior, alpha_phi1_prior, beta_phi1_prior, sigma2_epsilon_init, beta0_init, beta1_init, A11_init, A22_init, A21_init, mu_init, alpha_init, tau2_init, w0_init, phi0_init, w1_init, phi1_init, model_type_indicator)
+DLfuse_s <- function(mcmc_samples, y, z, sample_size, spatial_dists, neighbors, metrop_var_A11_trans, metrop_var_A22_trans, metrop_var_mu, metrop_var_alpha, metrop_var_phi0_trans, metrop_var_phi1_trans, alpha_sigma2_epsilon_prior = NULL, beta_sigma2_epsilon_prior = NULL, sigma2_beta_prior = NULL, sigma2_A_prior = NULL, alpha_tau2_prior = NULL, beta_tau2_prior = NULL, alpha_phi0_prior = NULL, beta_phi0_prior = NULL, alpha_phi1_prior = NULL, beta_phi1_prior = NULL, sigma2_epsilon_init = NULL, beta0_init = NULL, beta1_init = NULL, A11_init = NULL, A22_init = NULL, A21_init = NULL, mu_init = NULL, alpha_init = NULL, tau2_init = NULL, w0_init = NULL, phi0_init = NULL, w1_init = NULL, phi1_init = NULL, weights_definition_indicator = NULL, model_type_indicator = NULL) {
+    .Call(`_DLfuse_DLfuse_s`, mcmc_samples, y, z, sample_size, spatial_dists, neighbors, metrop_var_A11_trans, metrop_var_A22_trans, metrop_var_mu, metrop_var_alpha, metrop_var_phi0_trans, metrop_var_phi1_trans, alpha_sigma2_epsilon_prior, beta_sigma2_epsilon_prior, sigma2_beta_prior, sigma2_A_prior, alpha_tau2_prior, beta_tau2_prior, alpha_phi0_prior, beta_phi0_prior, alpha_phi1_prior, beta_phi1_prior, sigma2_epsilon_init, beta0_init, beta1_init, A11_init, A22_init, A21_init, mu_init, alpha_init, tau2_init, w0_init, phi0_init, w1_init, phi1_init, weights_definition_indicator, model_type_indicator)
 }
 
-DLfuse_st <- function(mcmc_samples, y, z, sample_size, AQS_key, CMAQ_key, spatial_dists, AQS_unique_total, neighbors, CMAQ_unique_total, metrop_var_rho1_trans, metrop_var_rho2_trans, metrop_var_A11_trans, metrop_var_A22_trans, metrop_var_mu, metrop_var_mut, metrop_var_rho3_trans, metrop_var_alpha, metrop_var_phi0_trans, metrop_var_phi1_trans, alpha_sigma2_epsilon_prior = NULL, beta_sigma2_epsilon_prior = NULL, sigma2_beta_prior = NULL, Omega_V_inv_prior = NULL, nu_V_inv_prior = NULL, a_rho1_prior = NULL, b_rho1_prior = NULL, a_rho2_prior = NULL, b_rho2_prior = NULL, sigma2_A_prior = NULL, alpha_sigma2_delta_prior = NULL, beta_sigma2_delta_prior = NULL, a_rho3_prior = NULL, b_rho3_prior = NULL, alpha_tau2_prior = NULL, beta_tau2_prior = NULL, alpha_phi0_prior = NULL, beta_phi0_prior = NULL, alpha_phi1_prior = NULL, beta_phi1_prior = NULL, sigma2_epsilon_init = NULL, beta0_init = NULL, beta1_init = NULL, betat_init = NULL, V_init = NULL, rho1_init = NULL, rho2_init = NULL, A11_init = NULL, A22_init = NULL, A21_init = NULL, mu_init = NULL, mut_init = NULL, sigma2_delta_init = NULL, rho3_init = NULL, alpha_init = NULL, tau2_init = NULL, w0_init = NULL, phi0_init = NULL, w1_init = NULL, phi1_init = NULL, model_type_indicator = NULL) {
-    .Call(`_DLfuse_DLfuse_st`, mcmc_samples, y, z, sample_size, AQS_key, CMAQ_key, spatial_dists, AQS_unique_total, neighbors, CMAQ_unique_total, metrop_var_rho1_trans, metrop_var_rho2_trans, metrop_var_A11_trans, metrop_var_A22_trans, metrop_var_mu, metrop_var_mut, metrop_var_rho3_trans, metrop_var_alpha, metrop_var_phi0_trans, metrop_var_phi1_trans, alpha_sigma2_epsilon_prior, beta_sigma2_epsilon_prior, sigma2_beta_prior, Omega_V_inv_prior, nu_V_inv_prior, a_rho1_prior, b_rho1_prior, a_rho2_prior, b_rho2_prior, sigma2_A_prior, alpha_sigma2_delta_prior, beta_sigma2_delta_prior, a_rho3_prior, b_rho3_prior, alpha_tau2_prior, beta_tau2_prior, alpha_phi0_prior, beta_phi0_prior, alpha_phi1_prior, beta_phi1_prior, sigma2_epsilon_init, beta0_init, beta1_init, betat_init, V_init, rho1_init, rho2_init, A11_init, A22_init, A21_init, mu_init, mut_init, sigma2_delta_init, rho3_init, alpha_init, tau2_init, w0_init, phi0_init, w1_init, phi1_init, model_type_indicator)
+DLfuse_st <- function(mcmc_samples, y, z, sample_size, AQS_key, CMAQ_key, spatial_dists, AQS_unique_total, neighbors, CMAQ_unique_total, metrop_var_rho1_trans, metrop_var_rho2_trans, metrop_var_A11_trans, metrop_var_A22_trans, metrop_var_mu, metrop_var_mut, metrop_var_rho3_trans, metrop_var_alpha, metrop_var_phi0_trans, metrop_var_phi1_trans, alpha_sigma2_epsilon_prior = NULL, beta_sigma2_epsilon_prior = NULL, sigma2_beta_prior = NULL, Omega_V_inv_prior = NULL, nu_V_inv_prior = NULL, a_rho1_prior = NULL, b_rho1_prior = NULL, a_rho2_prior = NULL, b_rho2_prior = NULL, sigma2_A_prior = NULL, alpha_sigma2_delta_prior = NULL, beta_sigma2_delta_prior = NULL, a_rho3_prior = NULL, b_rho3_prior = NULL, alpha_tau2_prior = NULL, beta_tau2_prior = NULL, alpha_phi0_prior = NULL, beta_phi0_prior = NULL, alpha_phi1_prior = NULL, beta_phi1_prior = NULL, sigma2_epsilon_init = NULL, beta0_init = NULL, beta1_init = NULL, betat_init = NULL, V_init = NULL, rho1_init = NULL, rho2_init = NULL, A11_init = NULL, A22_init = NULL, A21_init = NULL, mu_init = NULL, mut_init = NULL, sigma2_delta_init = NULL, rho3_init = NULL, alpha_init = NULL, tau2_init = NULL, w0_init = NULL, phi0_init = NULL, w1_init = NULL, phi1_init = NULL, weights_definition_indicator = NULL, model_type_indicator = NULL) {
+    .Call(`_DLfuse_DLfuse_st`, mcmc_samples, y, z, sample_size, AQS_key, CMAQ_key, spatial_dists, AQS_unique_total, neighbors, CMAQ_unique_total, metrop_var_rho1_trans, metrop_var_rho2_trans, metrop_var_A11_trans, metrop_var_A22_trans, metrop_var_mu, metrop_var_mut, metrop_var_rho3_trans, metrop_var_alpha, metrop_var_phi0_trans, metrop_var_phi1_trans, alpha_sigma2_epsilon_prior, beta_sigma2_epsilon_prior, sigma2_beta_prior, Omega_V_inv_prior, nu_V_inv_prior, a_rho1_prior, b_rho1_prior, a_rho2_prior, b_rho2_prior, sigma2_A_prior, alpha_sigma2_delta_prior, beta_sigma2_delta_prior, a_rho3_prior, b_rho3_prior, alpha_tau2_prior, beta_tau2_prior, alpha_phi0_prior, beta_phi0_prior, alpha_phi1_prior, beta_phi1_prior, sigma2_epsilon_init, beta0_init, beta1_init, betat_init, V_init, rho1_init, rho2_init, A11_init, A22_init, A21_init, mu_init, mut_init, sigma2_delta_init, rho3_init, alpha_init, tau2_init, w0_init, phi0_init, w1_init, phi1_init, weights_definition_indicator, model_type_indicator)
 }
 
 V_update_st <- function(betat, rho1_old, rho2_old, Omega_V_inv, nu_v_inv) {
     .Call(`_DLfuse_V_update_st`, betat, rho1_old, rho2_old, Omega_V_inv, nu_v_inv)
 }
 
-alpha_update_s <- function(y, z, neighbors, alpha_old, lagged_covars, sigma2_epsilon, beta0, beta1, A11, A22, A21, mu, tau2_old, w0_old, w1_old, keep5, sample_size, metrop_var_alpha, acctot_alpha) {
-    .Call(`_DLfuse_alpha_update_s`, y, z, neighbors, alpha_old, lagged_covars, sigma2_epsilon, beta0, beta1, A11, A22, A21, mu, tau2_old, w0_old, w1_old, keep5, sample_size, metrop_var_alpha, acctot_alpha)
+alpha_update_s <- function(y, z, neighbors, alpha_old, lagged_covars, sigma2_epsilon, beta0, beta1, A11, A22, A21, mu, tau2_old, w0_old, w1_old, keep5, sample_size, metrop_var_alpha, acctot_alpha, weights_definition) {
+    .Call(`_DLfuse_alpha_update_s`, y, z, neighbors, alpha_old, lagged_covars, sigma2_epsilon, beta0, beta1, A11, A22, A21, mu, tau2_old, w0_old, w1_old, keep5, sample_size, metrop_var_alpha, acctot_alpha, weights_definition)
 }
 
-alpha_update_st <- function(y, z, neighbors, alpha_old, lagged_covars, sigma2_epsilon, beta0, beta1, betat, A11, A22, A21, mu, mut, tau2_old, w0_old, w1_old, keep7, sample_size, AQS_key, CMAQ_key, metrop_var_alpha, acctot_alpha) {
-    .Call(`_DLfuse_alpha_update_st`, y, z, neighbors, alpha_old, lagged_covars, sigma2_epsilon, beta0, beta1, betat, A11, A22, A21, mu, mut, tau2_old, w0_old, w1_old, keep7, sample_size, AQS_key, CMAQ_key, metrop_var_alpha, acctot_alpha)
+alpha_update_st <- function(y, z, neighbors, alpha_old, lagged_covars, sigma2_epsilon, beta0, beta1, betat, A11, A22, A21, mu, mut, tau2_old, w0_old, w1_old, keep7, sample_size, AQS_key, CMAQ_key, metrop_var_alpha, acctot_alpha, weights_definition) {
+    .Call(`_DLfuse_alpha_update_st`, y, z, neighbors, alpha_old, lagged_covars, sigma2_epsilon, beta0, beta1, betat, A11, A22, A21, mu, mut, tau2_old, w0_old, w1_old, keep7, sample_size, AQS_key, CMAQ_key, metrop_var_alpha, acctot_alpha, weights_definition)
 }
 
 beta0_update_s <- function(y, mean_temp, sigma2_epsilon, sample_size, sigma2_beta) {
@@ -65,12 +65,12 @@ betat_update_st <- function(last_time_ind, y_t, mean_temp_t, lagged_covars_t, si
     .Call(`_DLfuse_betat_update_st`, last_time_ind, y_t, mean_temp_t, lagged_covars_t, sigma2_epsilon, betat_previous, betat_next, V_old, rho1_old, rho2_old)
 }
 
-construct_lagged_covars_s <- function(z, mu, alpha, sample_size) {
-    .Call(`_DLfuse_construct_lagged_covars_s`, z, mu, alpha, sample_size)
+construct_lagged_covars_s <- function(z, mu, alpha, sample_size, weights_definition) {
+    .Call(`_DLfuse_construct_lagged_covars_s`, z, mu, alpha, sample_size, weights_definition)
 }
 
-construct_lagged_covars_st <- function(z_t, mu, mut_t, alpha, sample_size_t, CMAQ_key) {
-    .Call(`_DLfuse_construct_lagged_covars_st`, z_t, mu, mut_t, alpha, sample_size_t, CMAQ_key)
+construct_lagged_covars_st <- function(z_t, mu, mut_t, alpha, sample_size_t, CMAQ_key, weights_definition) {
+    .Call(`_DLfuse_construct_lagged_covars_st`, z_t, mu, mut_t, alpha, sample_size_t, CMAQ_key, weights_definition)
 }
 
 construct_mean_s <- function(beta0, beta1, A11, A22, A21, w0, w1, Omega, keep, sample_size) {
@@ -81,16 +81,16 @@ construct_mean_st <- function(beta0, beta1, betat_t, A11, A22, A21, w0, w1, Omeg
     .Call(`_DLfuse_construct_mean_st`, beta0, beta1, betat_t, A11, A22, A21, w0, w1, Omega_t, keep, sample_size_t, AQS_key_mat_t)
 }
 
-mu_update_s <- function(y, z, mu_old, lagged_covars, sigma2_epsilon, beta0, beta1, A11, A22, A21, alpha_old, w0_old, w1_old, keep5, sample_size, metrop_var_mu, acctot_mu) {
-    .Call(`_DLfuse_mu_update_s`, y, z, mu_old, lagged_covars, sigma2_epsilon, beta0, beta1, A11, A22, A21, alpha_old, w0_old, w1_old, keep5, sample_size, metrop_var_mu, acctot_mu)
+mu_update_s <- function(y, z, mu_old, lagged_covars, sigma2_epsilon, beta0, beta1, A11, A22, A21, alpha_old, w0_old, w1_old, keep5, sample_size, metrop_var_mu, acctot_mu, weights_definition) {
+    .Call(`_DLfuse_mu_update_s`, y, z, mu_old, lagged_covars, sigma2_epsilon, beta0, beta1, A11, A22, A21, alpha_old, w0_old, w1_old, keep5, sample_size, metrop_var_mu, acctot_mu, weights_definition)
 }
 
-mu_update_st <- function(y, z, mu_old, lagged_covars, sigma2_epsilon, beta0, beta1, betat, A11, A22, A21, mut_old, alpha_old, w0_old, w1_old, keep7, sample_size, AQS_key_mat, CMAQ_key, metrop_var_mu, acctot_mu) {
-    .Call(`_DLfuse_mu_update_st`, y, z, mu_old, lagged_covars, sigma2_epsilon, beta0, beta1, betat, A11, A22, A21, mut_old, alpha_old, w0_old, w1_old, keep7, sample_size, AQS_key_mat, CMAQ_key, metrop_var_mu, acctot_mu)
+mu_update_st <- function(y, z, mu_old, lagged_covars, sigma2_epsilon, beta0, beta1, betat, A11, A22, A21, mut_old, alpha_old, w0_old, w1_old, keep7, sample_size, AQS_key_mat, CMAQ_key, metrop_var_mu, acctot_mu, weights_definition) {
+    .Call(`_DLfuse_mu_update_st`, y, z, mu_old, lagged_covars, sigma2_epsilon, beta0, beta1, betat, A11, A22, A21, mut_old, alpha_old, w0_old, w1_old, keep7, sample_size, AQS_key_mat, CMAQ_key, metrop_var_mu, acctot_mu, weights_definition)
 }
 
-mut_update_st <- function(last_time_ind, y_t, z_t, mut_t_old, lagged_covars_t, sigma2_epsilon, beta0, beta1, betat_t, A11, A22, A21, mu, mut_previous, mut_next, sigma2_delta_old, rho3_old, alpha_old, w0_old, w1_old, keep7, sample_size_t, AQS_key_mat_t, CMAQ_key_t, metrop_var_mut_t, acctot_mut_t) {
-    .Call(`_DLfuse_mut_update_st`, last_time_ind, y_t, z_t, mut_t_old, lagged_covars_t, sigma2_epsilon, beta0, beta1, betat_t, A11, A22, A21, mu, mut_previous, mut_next, sigma2_delta_old, rho3_old, alpha_old, w0_old, w1_old, keep7, sample_size_t, AQS_key_mat_t, CMAQ_key_t, metrop_var_mut_t, acctot_mut_t)
+mut_update_st <- function(last_time_ind, y_t, z_t, mut_t_old, lagged_covars_t, sigma2_epsilon, beta0, beta1, betat_t, A11, A22, A21, mu, mut_previous, mut_next, sigma2_delta_old, rho3_old, alpha_old, w0_old, w1_old, keep7, sample_size_t, AQS_key_mat_t, CMAQ_key_t, metrop_var_mut_t, acctot_mut_t, weights_definition) {
+    .Call(`_DLfuse_mut_update_st`, last_time_ind, y_t, z_t, mut_t_old, lagged_covars_t, sigma2_epsilon, beta0, beta1, betat_t, A11, A22, A21, mu, mut_previous, mut_next, sigma2_delta_old, rho3_old, alpha_old, w0_old, w1_old, keep7, sample_size_t, AQS_key_mat_t, CMAQ_key_t, metrop_var_mut_t, acctot_mut_t, weights_definition)
 }
 
 neg_two_loglike_update_s <- function(y, mean_temp, sigma2_epsilon) {
@@ -105,12 +105,12 @@ phi_update <- function(phi_old, spatial_dists, w, spatial_corr_info, alpha_phi, 
     .Call(`_DLfuse_phi_update`, phi_old, spatial_dists, w, spatial_corr_info, alpha_phi, beta_phi, metrop_var_phi_trans, acctot_phi_trans)
 }
 
-ppd_s <- function(modeling_output, n_pred, m_pred, z_pred, sample_size_pred, spatial_dists_full, neighbors_full, inference_set, params_only_indicator = NULL, model_type_indicator = NULL) {
-    .Call(`_DLfuse_ppd_s`, modeling_output, n_pred, m_pred, z_pred, sample_size_pred, spatial_dists_full, neighbors_full, inference_set, params_only_indicator, model_type_indicator)
+ppd_s <- function(modeling_output, n_pred, m_pred, z_pred, sample_size_pred, spatial_dists_full, neighbors_full, inference_set, params_only_indicator = NULL, weights_definition_indicator = NULL, model_type_indicator = NULL) {
+    .Call(`_DLfuse_ppd_s`, modeling_output, n_pred, m_pred, z_pred, sample_size_pred, spatial_dists_full, neighbors_full, inference_set, params_only_indicator, weights_definition_indicator, model_type_indicator)
 }
 
-ppd_st <- function(modeling_output, n_pred, m_pred, z_pred, sample_size_pred, spatial_dists_full, neighbors_full, inference_set, params_only_indicator = NULL, model_type_indicator = NULL) {
-    .Call(`_DLfuse_ppd_st`, modeling_output, n_pred, m_pred, z_pred, sample_size_pred, spatial_dists_full, neighbors_full, inference_set, params_only_indicator, model_type_indicator)
+ppd_st <- function(modeling_output, n_pred, m_pred, z_pred, sample_size_pred, spatial_dists_full, neighbors_full, inference_set, params_only_indicator = NULL, weights_definition_indicator = NULL, model_type_indicator = NULL) {
+    .Call(`_DLfuse_ppd_st`, modeling_output, n_pred, m_pred, z_pred, sample_size_pred, spatial_dists_full, neighbors_full, inference_set, params_only_indicator, weights_definition_indicator, model_type_indicator)
 }
 
 rho1_update_st <- function(rho1_old, betat, V, rho2_old, a_rho1, b_rho1, metrop_var_rho1_trans, acctot_rho1_trans) {
