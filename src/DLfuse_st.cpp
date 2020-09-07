@@ -69,8 +69,8 @@ Rcpp::List DLfuse_st(int mcmc_samples,
                      Rcpp::Nullable<int> weights_definition_indicator = R_NilValue,
                      Rcpp::Nullable<int> model_type_indicator = R_NilValue){
 
-//weights_indicator = 0: probit, power
-//weights_indicator = 1: exponential, spherical
+//weights_definition_indicator = 0: probit, power
+//weights_definition_indicator = 1: exponential, spherical
 int weights_definition = 0;
 if(weights_definition_indicator.isNotNull()){
   weights_definition = Rcpp::as<int>(weights_definition_indicator);

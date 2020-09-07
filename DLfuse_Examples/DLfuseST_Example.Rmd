@@ -241,12 +241,14 @@ for(j in 1:d){
                   nrow = length(CMAQ_key[[j]]), 
                   ncol = L)
 
-   covars_true[[j]]<-construct_lagged_covars_st(z[[j]],
-                                                mu_true,
-                                                mut_true[j],
-                                                alpha_true,
-                                                sample_size[[j]],
-                                                CMAQ_key[[j]])[[1]]
+   covars_true[[j]]<-construct_lagged_covars_st(
+                     z[[j]],
+                     mu_true,
+                     mut_true[j],
+                     alpha_true,
+                     sample_size[[j]],
+                     CMAQ_key[[j]],
+                     0)[[1]]  #Probit Weights (1 for Spherical)
 
    y[[j]]<-rnorm(n = sum(sample_size[[j]]),
                  mean = ((beta0_true + betat_true[j,1] + 
@@ -295,6 +297,7 @@ dlfuse_st_results<-DLfuse_st(mcmc_samples = samples,
                              metrop_var_alpha = rep(1.40^2, times=nrow(neighbors)),
                              metrop_var_phi0_trans = (0.60^2),
                              metrop_var_phi1_trans = (0.62^2),
+                             weights_definition_indicator = 0,  #Probit (1 for Spherical)
                              model_type_indicator = 0)
 ```
 
@@ -316,7 +319,8 @@ for(j in 1:(d-1)){
                mean(dlfuse_st_results$lag_info$mut[j,keep_set]),
                rowMeans(dlfuse_st_results$lag_info$alpha[,keep_set]),
                sample_size[[j]],
-               CMAQ_key[[j]])[[1]]
+               CMAQ_key[[j]],
+               0)[[1]]  #Probit Weights (1 for Spherical)
 
    plot(covars_true[[j]], 
        covars_est)
@@ -398,16 +402,18 @@ for(j in 1:nrow(loc_temp)){
    }
 diag(neighbors_full)<-0
 
-dlfuse_st_pred_results<-ppd_st(modeling_output = dlfuse_st_results,
-                               n_pred = length(y_validation),
-                               m_pred = nrow(z_validation),
-                               z_pred = z_validation,
-                               sample_size_pred = sample_size_validation,
-                               spatial_dists_full = spatial_dists_full,  
-                               neighbors_full = neighbors_full,  
-                               inference_set = keep_set,
-                               params_only_indicator = 0,
-                               model_type_indicator = 0)
+dlfuse_st_pred_results<-
+ppd_st(modeling_output = dlfuse_st_results,
+       n_pred = length(y_validation),
+       m_pred = nrow(z_validation),
+       z_pred = z_validation,
+       sample_size_pred = sample_size_validation,
+       spatial_dists_full = spatial_dists_full,  
+       neighbors_full = neighbors_full,  
+       inference_set = keep_set,
+       params_only_indicator = 0,
+       weights_definition_indicator = 0,  #Probit Weights (1 for Spherical)
+       model_type_indicator = 0)
 ```
 
 [5]  Comparison with other approaches:

@@ -129,9 +129,9 @@ alpha_true<-alpha_true -
 
 mu_true<-1.00
 
-########################################################
+#################################################################################
 #Creating Lagged Covariates
-########################################################
+#################################################################################
 L<-11
 z<-matrix(rgamma(n = (length(sample_size)*L), 
                  shape = 1, 
@@ -141,7 +141,8 @@ z<-matrix(rgamma(n = (length(sample_size)*L),
 covars_true<-construct_lagged_covars_s(z,
                                        mu_true,
                                        alpha_true,
-                                       sample_size)[[1]]
+                                       sample_size,
+                                       0)[[1]]  #Probit Weights (1 for Spherical)
 ```
 
 * Simulating the analysis dataset:
@@ -182,6 +183,7 @@ DLfuse_s(mcmc_samples = samples,
                                 times = nrow(neighbors[test_set, test_set])),
          metrop_var_phi0_trans = (0.50^2),
          metrop_var_phi1_trans = (0.50^2),
+         weights_definition_indicator = 0,  #Probit (1 for Spherical)
          model_type_indicator = 0)
 ```
 
@@ -198,7 +200,8 @@ par(mfrow=c(1,2))
 covars_est<-construct_lagged_covars_s(z[test_set,],
                                       mean(dlfuse_results$lag_info$mu[keep_set]),
                                       rowMeans(dlfuse_results$lag_info$alpha[,keep_set]),
-                                      sample_size[test_set])[[1]]
+                                      sample_size[test_set],
+                                      0)[[1]]  #Probit Weights (1 for Spherical)
 
 plot(covars_true[CMAQ_key_test_set == 1], 
      covars_est)
@@ -274,6 +277,7 @@ dlfuse_pred_results<-ppd_s(modeling_output = dlfuse_results,
                            neighbors_full = neighbors_full,  
                            inference_set = keep_set,
                            params_only_indicator = 0,
+                           weights_definition_indicator = 0,  #Probit (1 for Spherical)
                            model_type_indicator = 0)
 ```
 

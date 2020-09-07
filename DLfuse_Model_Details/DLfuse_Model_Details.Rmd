@@ -9,7 +9,10 @@ output:
 ## DLfuse Statistical Model
 $$Y\left(\textbf{s}_{ij}\right) = \widetilde{\boldsymbol{\beta}}_0\left(\textbf{s}_{ij}\right) + \widetilde{\boldsymbol{\beta}}_1\left(\textbf{s}_{ij}\right) \sum_{l=0}^L \bar{\text{x}}_{B_i, l} \left(\frac{\pi_{B_i, l}}{\sum_{k=0}^L \pi_{B_i, k}}\right) + \epsilon\left(\textbf{s}_{ij}\right),\ \epsilon\left(\textbf{s}_{ij}\right)|\sigma^2_{\epsilon} \stackrel{\text{iid}}{\sim}\text{N}\left(0, \sigma^2_{\epsilon}\right);$$
 
+Probit Weights:
 $$\pi_{B_i, l} = \Phi\left(\mu + \alpha_{B_i}\right)^{l},\ l=0, ..., L;$$
+Spherical Weights:
+$$\pi_{B_i,l} = \left\{1.00 - 1.50\left(\frac{l}{\exp\left\{\mu + \alpha_{B_i}\right\}}\right) + 0.50\left(\frac{l}{\exp\left\{\mu + \alpha_{B_i}\right\}}\right)^3\right\} 1\left(l < \exp\left\{\mu + \alpha_{B_i}\right\}\right),\ l=0,...,L;$$
 
 $$\alpha_{B_i}|\boldsymbol{\alpha}_{-B_i}, \tau^2 \stackrel{\text{ind}}{\sim}\text{N}\left(\frac{\sum_{j=1}^m w_{ij} \alpha_{B_j}}{\sum_{j=1}^m w_{ij}}, \frac{\tau^2}{\sum_{j=1}^m w_{ij}}\right),\ i=1,...,m;$$
 
