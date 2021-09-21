@@ -6,6 +6,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // A11_update_s
 Rcpp::List A11_update_s(arma::vec y, double A11_old, Rcpp::List lagged_covars, double sigma2_epsilon, double beta0, double beta1, double A22_old, double A21_old, arma::vec w0_old, arma::vec w1_old, arma::uvec keep5, arma::vec sample_size, double sigma2_A, double metrop_var_A11_trans, int acctot_A11_trans);
 RcppExport SEXP _DLfuse_A11_update_s(SEXP ySEXP, SEXP A11_oldSEXP, SEXP lagged_covarsSEXP, SEXP sigma2_epsilonSEXP, SEXP beta0SEXP, SEXP beta1SEXP, SEXP A22_oldSEXP, SEXP A21_oldSEXP, SEXP w0_oldSEXP, SEXP w1_oldSEXP, SEXP keep5SEXP, SEXP sample_sizeSEXP, SEXP sigma2_ASEXP, SEXP metrop_var_A11_transSEXP, SEXP acctot_A11_transSEXP) {
