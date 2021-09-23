@@ -42,7 +42,7 @@ A(1,0) = R::rnorm(0.00,
 A(0,0) = sqrt(R::rchisq(df));
 A(1,1) = sqrt(R::rchisq(df - 1.00));
 
-arma::mat V_inv = L*A*trans(A)*trans(L);
+arma::mat V_inv = (L*A)*trans(L*A);
 arma::mat V = inv_sympd(V_inv);
 
 return(V);
